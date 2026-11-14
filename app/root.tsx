@@ -8,6 +8,7 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
+import Header from "~/components/Header";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -42,7 +43,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <div className="flex h-dvh flex-col">
+      <Header />
+      <main className="min-h-0 flex-1 overflow-y-auto">
+        <Outlet />
+      </main>
+    </div>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
