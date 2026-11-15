@@ -8,6 +8,7 @@ import PriceChart from "~/components/PriceChart";
 import ReconnectingNote from "~/components/ReconnectingNote";
 import TradeForm from "~/components/TradeForm";
 import TradeHistory from "~/components/TradeHistory";
+import { useEquityRecorder } from "~/state/equity";
 import { useLivePrices } from "~/state/live-prices";
 import { usePairs } from "~/state/pairs";
 import { useProfile } from "~/state/store";
@@ -25,6 +26,7 @@ export default function Trade({ params }: Route.ComponentProps) {
   const held = Object.keys(profile.holdings);
   const coins = pair && !held.includes(coin) ? [...held, coin] : held;
   const { prices, error: pricesError, live, retry: retryPrices } = useLivePrices(coins);
+  useEquityRecorder(prices);
   const [tab, setTab] = useState<PortfolioTab>("holdings");
 
   return (

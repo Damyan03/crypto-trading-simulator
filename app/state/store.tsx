@@ -1,11 +1,12 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { getDailyOpens, getTradingPairs } from "~/data/binance-api";
 import { load, save } from "~/data/storage";
-import { createDemoProfile } from "~/domain/demo";
-import { createProfile, type Profile, type Trade } from "~/domain/profile";
+import { createDemoProfile, DEMO_COINS, DEMO_DAYS } from "~/domain/demo";
+import { createProfile, type EquityPoint, type Profile, type Trade } from "~/domain/profile";
 
 // Bump the version when the Profile shape changes; old saves are then ignored
 const STORAGE_KEY = "profile";
-const STORAGE_VERSION = 3;
+const STORAGE_VERSION = 4;
 
 /** What useProfile() returns */
 interface ProfileState {
@@ -13,8 +14,8 @@ interface ProfileState {
   setProfile: (profile: Profile) => void;
   /** Back to 10,000 USDT, no holdings or trades */
   reset: () => void;
-  /** Replaces the account with the demo account */
-  resetToDemo: () => void;
+  /** Replaces the account with the demo account, built from real past prices; rejects if they can't be loaded */
+  resetToDemo: () => Promise<void>;
 }
 
 // Shares the profile with every component inside ProfileProvider
@@ -29,17 +30,26 @@ const isTrade = (t: Trade) =>
   Number.isFinite(t?.price) &&
   Number.isFinite(t?.fee);
 
+const isEquityPoint = (p: EquityPoint) => Number.isFinite(p?.time) && Number.isFinite(p?.value);
+
 /** Null if the data isn't a valid profile */
 export function parseProfile(raw: unknown): Profile | null {
   if (typeof raw !== "object" || raw === null) return null;
-  const { balance, holdings, trades } = raw as Partial<Profile>;
-  if (!Number.isFinite(balance) || typeof holdings !== "object" || holdings === null || !Array.isArray(trades)) {
+  const { balance, holdings, trades, equity } = raw as Partial<Profile>;
+  if (
+    !Number.isFinite(balance) ||
+    typeof holdings !== "object" ||
+    holdings === null ||
+    !Array.isArray(trades) ||
+    !Array.isArray(equity)
+  ) {
     return null;
   }
   const valid =
     Object.values(holdings).every((h) => Number.isFinite(h?.quantity) && Number.isFinite(h?.avgPrice)) &&
-    trades.every(isTrade);
-  return valid ? { balance: balance as number, holdings, trades } : null;
+    trades.every(isTrade) &&
+    equity.every(isEquityPoint);
+  return valid ? { balance: balance as number, holdings, trades, equity } : null;
 }
 
 /** Saved profile, or a new one if there's no valid one */
@@ -52,7 +62,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   useEffect(() => save(STORAGE_KEY, STORAGE_VERSION, profile), [profile]);
 
   const reset = () => setProfile(createProfile());
-  const resetToDemo = () => setProfile(createDemoProfile());
+  const resetToDemo = async () => {
+    const [days, pairs] = await Promise.all([getDailyOpens(DEMO_COINS, DEMO_DAYS), getTradingPairs()]);
+    const decimals = Object.fromEntries(pairs.map((p) => [p.coin, p.quantityDecimals]));
+    setProfile(createDemoProfile(days, decimals));
+  };
 
   return (
     <ProfileContext.Provider value={{ profile, setProfile, reset, resetToDemo }}>{children}</ProfileContext.Provider>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import EquityChart from "~/components/EquityChart";
 import ErrorMessage from "~/components/ErrorMessage";
 import HoldingsList from "~/components/HoldingsList";
 import PortfolioSummary from "~/components/PortfolioSummary";
@@ -6,6 +7,7 @@ import PortfolioTabs, { type PortfolioTab } from "~/components/PortfolioTabs";
 import ReconnectingNote from "~/components/ReconnectingNote";
 import SearchBox from "~/components/SearchBox";
 import TradeHistory from "~/components/TradeHistory";
+import { useEquityRecorder } from "~/state/equity";
 import { useLivePrices } from "~/state/live-prices";
 import { usePairs } from "~/state/pairs";
 import { useProfile } from "~/state/store";
@@ -13,6 +15,7 @@ import { useProfile } from "~/state/store";
 export default function Portfolio() {
   const { profile } = useProfile();
   const { prices, error, live, retry } = useLivePrices(Object.keys(profile.holdings));
+  useEquityRecorder(prices);
   // decimals for formatting; if this fails, formatting falls back to default decimals
   const { pairs = {} } = usePairs();
   // text in the search box, passed to the table as a filter
@@ -24,6 +27,9 @@ export default function Portfolio() {
       <div className="flex flex-col w-2/3 h-full bg-green-500">
         <div className="items-center justify-center w-full h-2/5 bg-blue-500">
           <PortfolioSummary profile={profile} prices={prices} />
+        </div>
+        <div className="w-full h-1/4 min-h-0 bg-surface">
+          <EquityChart points={profile.equity} />
         </div>
         <div className="flex flex-col flex-1 min-h-0 bg-orange-500">
           <PortfolioTabs active={tab} onChange={setTab} />

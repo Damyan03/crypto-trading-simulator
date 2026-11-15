@@ -43,12 +43,12 @@ export function applyTrade(profile: Profile, request: TradeRequest, time = Date.
     // average cost per coin over all buys, fees included
     const avgPrice = (held.quantity * held.avgPrice + total + fee) / newQuantity;
     holdings[coin] = { quantity: newQuantity, avgPrice };
-    return { balance: profile.balance - total - fee, holdings, trades };
+    return { ...profile, balance: profile.balance - total - fee, holdings, trades };
   }
 
   // selling keeps the average buy price
   const left = clean(held.quantity - quantity);
   if (left > 0) holdings[coin] = { ...held, quantity: left };
   else delete holdings[coin];
-  return { balance: profile.balance + total - fee, holdings, trades };
+  return { ...profile, balance: profile.balance + total - fee, holdings, trades };
 }

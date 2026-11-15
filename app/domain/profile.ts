@@ -13,6 +13,13 @@ export type Holdings = Record<string, Holding>;
 /** Latest price in USDT per coin, e.g. { BTC: 97000, ETH: 3400 } */
 export type Prices = Record<string, number>;
 
+/** Prices of several coins at one moment */
+export interface PriceSnapshot {
+  /** Unix time in ms */
+  time: number;
+  prices: Prices;
+}
+
 export type Side = "BUY" | "SELL";
 
 /** A completed trade; stored as it happened, never changed */
@@ -30,17 +37,27 @@ export interface Trade {
   fee: number;
 }
 
+/** The account's total value at one moment, for the equity curve */
+export interface EquityPoint {
+  /** Unix time in ms */
+  time: number;
+  /** Cash + holdings in USDT */
+  value: number;
+}
+
 export interface Profile {
   /** Cash in USDT */
   balance: number;
   holdings: Holdings;
   /** Oldest first */
   trades: Trade[];
+  /** Oldest first */
+  equity: EquityPoint[];
 }
 
-/** create new profile */
-export function createProfile(): Profile {
-  return { balance: STARTING_BALANCE, holdings: {}, trades: [] };
+/** create new profile; its equity curve starts at the starting balance */
+export function createProfile(now = Date.now()): Profile {
+  return { balance: STARTING_BALANCE, holdings: {}, trades: [], equity: [{ time: now, value: STARTING_BALANCE }] };
 }
 
 /** cash + holdings total value */

@@ -1,16 +1,39 @@
-import { createProfile, type Profile } from "./profile";
-import { applyTrade, type TradeRequest } from "./trade-logic";
+import { addEquityPoint } from "./equity";
+import { createProfile, totalValue, type PriceSnapshot, type Profile, type Side } from "./profile";
+import { applyTrade, quantityFor, validateTrade } from "./trade-logic";
 
-const DAY = 24 * 60 * 60 * 1000;
+/** Coins the demo trades */
+export const DEMO_COINS = ["BTC", "ETH", "SOL"];
 
-// [days ago, trade]
-const DEMO_TRADES: [number, TradeRequest][] = [
-  [6, { side: "BUY", coin: "BTC", quantity: 0.03, price: 60_000 }],
-  [5, { side: "BUY", coin: "ETH", quantity: 0.5, price: 2_000 }],
-  [3, { side: "BUY", coin: "SOL", quantity: 10, price: 80 }],
-  [1, { side: "SELL", coin: "BTC", quantity: 0.01, price: 65_000 }],
+/** Days of history the demo needs: day 0 opens the account, the last day is today */
+export const DEMO_DAYS = 8;
+
+// [day, side, coin, USDT value]; USDT values fit the starting balance at any price
+const DEMO_TRADES: [number, Side, string, number][] = [
+  [1, "BUY", "BTC", 3_000],
+  [2, "BUY", "ETH", 1_500],
+  [4, "BUY", "SOL", 1_000],
+  [6, "SELL", "BTC", 1_000],
 ];
 
-/** A new account after a few past trades, made with the real trade logic so everything adds up */
-export const createDemoProfile = (now = Date.now()): Profile =>
-  DEMO_TRADES.reduce((profile, [daysAgo, trade]) => applyTrade(profile, trade, now - daysAgo * DAY), createProfile());
+/**
+ * An account that traded over the past days at real prices, made with the real trade logic so everything adds up.
+ * `days`: each demo coin's price at the start of each day, oldest first; `decimals`: each coin's quantity decimals.
+ * One equity point per day.
+ */
+export function createDemoProfile(days: PriceSnapshot[], decimals: Record<string, number>): Profile {
+  let profile = createProfile(days[0].time);
+
+  days.forEach(({ time, prices }, day) => {
+    if (day === 0) return;
+    for (const [tradeDay, side, coin, usdt] of DEMO_TRADES) {
+      if (tradeDay !== day) continue;
+      const request = { side, coin, quantity: quantityFor(usdt, prices[coin], decimals[coin]), price: prices[coin] };
+      // skipped if the prices make it impossible
+      if (!validateTrade(profile, request)) profile = applyTrade(profile, request, time);
+    }
+    profile = addEquityPoint(profile, totalValue(profile, prices) ?? profile.balance, time);
+  });
+
+  return profile;
+}

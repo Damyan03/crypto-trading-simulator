@@ -1,24 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { CandlestickSeries, ColorType, createChart, type UTCTimestamp } from "lightweight-charts";
+import { CandlestickSeries, createChart, type UTCTimestamp } from "lightweight-charts";
 import ErrorMessage from "~/components/ErrorMessage";
 import ReconnectingNote from "~/components/ReconnectingNote";
 import { getCandles, subscribeCandles, type Candle, type Pair } from "~/data/binance-api";
+import { chartOptions, themeColor } from "~/utils/chart";
 
 // 500 one-hour candles ≈ the last 3 weeks
 const INTERVAL = "1h";
 
 interface Props {
   pair: Pair;
-}
-
-/** Resolves a theme colour, e.g. "--color-success", to a plain colour the chart's canvas understands */
-function themeColor(element: HTMLElement, variable: string) {
-  const probe = document.createElement("span");
-  probe.style.color = `var(${variable})`;
-  element.appendChild(probe);
-  const color = getComputedStyle(probe).color;
-  probe.remove();
-  return color;
 }
 
 // the chart wants its own timestamp type
@@ -38,20 +29,7 @@ export default function PriceChart({ pair }: Props) {
     if (!container) return;
     const color = (variable: string) => themeColor(container, variable);
 
-    const chart = createChart(container, {
-      autoSize: true,
-      layout: {
-        background: { type: ColorType.Solid, color: color("--color-surface") },
-        textColor: color("--color-muted-foreground"),
-        // TradingView link on the chart, required by the library's licence
-        attributionLogo: true,
-      },
-      grid: {
-        vertLines: { color: color("--color-chart-grid") },
-        horzLines: { color: color("--color-chart-grid") },
-      },
-      timeScale: { timeVisible: true },
-    });
+    const chart = createChart(container, chartOptions(container));
 
     const up = color("--color-success");
     const down = color("--color-danger");

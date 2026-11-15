@@ -1,5 +1,5 @@
 import type { Depth } from "~/domain/order-book";
-import type { Prices } from "~/domain/profile";
+import type { Prices, PriceSnapshot } from "~/domain/profile";
 import { getJson } from "./http";
 import { cached } from "./storage";
 
@@ -257,6 +257,16 @@ export const subscribePrices = (
     (t) => onUpdate(toCoin(t.s), Number(t.c)),
     onLiveChange,
   );
+
+/** Each coin's opening price for the last `days` days (UTC), oldest first; the last day is today */
+export async function getDailyOpens(coins: string[], days: number): Promise<PriceSnapshot[]> {
+  const candles = await Promise.all(coins.map((coin) => getCandles(toSymbol(coin), "1d", days)));
+  // same days for every coin, so the first coin's candles give the times
+  return candles[0].map((candle, i) => ({
+    time: candle.time * 1000,
+    prices: Object.fromEntries(coins.map((coin, c) => [coin, candles[c][i].open])),
+  }));
+}
 
 /** Latest price per coin */
 export async function getPrices(coins: string[]): Promise<Prices> {
