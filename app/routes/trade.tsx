@@ -1,9 +1,12 @@
+import { useState } from "react";
 import CoinDetails from "~/components/CoinDetails";
 import ErrorMessage from "~/components/ErrorMessage";
 import HoldingsList from "~/components/HoldingsList";
+import PortfolioTabs, { type PortfolioTab } from "~/components/PortfolioTabs";
 import PriceChart from "~/components/PriceChart";
 import ReconnectingNote from "~/components/ReconnectingNote";
 import TradeForm from "~/components/TradeForm";
+import TradeHistory from "~/components/TradeHistory";
 import { useLivePrices } from "~/state/live-prices";
 import { usePairs } from "~/state/pairs";
 import { useProfile } from "~/state/store";
@@ -21,6 +24,7 @@ export default function Trade({ params }: Route.ComponentProps) {
   const held = Object.keys(profile.holdings);
   const coins = pair && !held.includes(coin) ? [...held, coin] : held;
   const { prices, error: pricesError, live, retry: retryPrices } = useLivePrices(coins);
+  const [tab, setTab] = useState<PortfolioTab>("holdings");
 
   return (
     <div className="flex h-full w-full bg-red-500">
@@ -42,10 +46,19 @@ export default function Trade({ params }: Route.ComponentProps) {
             <div className="bg-gray-500 w-full">trade</div>
           </div>
         </div>
-        <div className="flex-1 min-h-0 overflow-y-auto bg-surface">
-          {pricesError && <ErrorMessage message={pricesError} onRetry={retryPrices} />}
-          {!live && <ReconnectingNote className="p-4" />}
-          <HoldingsList holdings={profile.holdings} prices={prices} pairs={pairs ?? {}} query="" />
+        <div className="flex flex-col flex-1 min-h-0 bg-surface">
+          <PortfolioTabs active={tab} onChange={setTab} />
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            {tab === "holdings" ? (
+              <>
+                {pricesError && <ErrorMessage message={pricesError} onRetry={retryPrices} />}
+                {!live && <ReconnectingNote className="p-4" />}
+                <HoldingsList holdings={profile.holdings} prices={prices} pairs={pairs ?? {}} query="" />
+              </>
+            ) : (
+              <TradeHistory trades={profile.trades} pairs={pairs ?? {}} query="" />
+            )}
+          </div>
         </div>
       </div>
       <div className="flex-1 bg-amber-500">

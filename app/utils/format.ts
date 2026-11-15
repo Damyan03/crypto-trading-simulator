@@ -12,6 +12,7 @@ const percent = new Intl.NumberFormat(undefined, {
   signDisplay: "exceptZero",
 });
 const volume = new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 });
+const time = new Intl.DateTimeFormat(undefined, { dateStyle: "short", timeStyle: "medium" });
 
 /** Green above 0, red below, neutral at 0 */
 export const changeColor = (value: number) => (value > 0 ? "text-success" : value < 0 ? "text-danger" : "");
@@ -24,6 +25,9 @@ export const formatSignedUsdt = (value: number) => signedUsdt.format(value);
 
 /** e.g. 1.2M */
 export const formatVolume = (value: number) => volume.format(value);
+
+/** Takes Unix ms, e.g. 15/11/2026, 14:03:22 */
+export const formatTime = (ms: number) => time.format(ms);
 
 /** Takes 5 for 5% */
 export const formatPercent = (value: number) => percent.format(value / 100);

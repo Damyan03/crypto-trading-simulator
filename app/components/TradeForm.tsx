@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { QUOTE, type Pair } from "~/data/binance-api";
-import { applyTrade, quantityFor, validateTrade, type Side } from "~/domain/trade-logic";
+import type { Side } from "~/domain/profile";
+import { applyTrade, quantityFor, validateTrade } from "~/domain/trade-logic";
 import { useProfile } from "~/state/store";
 import { formatPrice, formatQuantity, formatUsdt } from "~/utils/format";
 
@@ -32,12 +33,11 @@ export default function TradeForm({ pair, price }: Props) {
     if (tooManyDecimals) return setMessage({ text: `${coin} allows at most ${quantityDecimals} decimals.`, ok: false });
     if (quantity === null || price === undefined) return;
 
-    const trade = { side, coin, quantity, price };
-    const invalid = validateTrade(profile, trade);
+    const request = { side, coin, quantity, price };
+    const invalid = validateTrade(profile, request);
     if (invalid) return setMessage({ text: invalid, ok: false });
 
-    setProfile(applyTrade(profile, trade));
-    setAmount("");
+    setProfile(applyTrade(profile, request));
     setMessage({
       text: `${side === "BUY" ? "Bought" : "Sold"} ${formatQuantity(quantity, quantityDecimals)} ${coin} at ${formatPrice(price, priceDecimals)} ${QUOTE}.`,
       ok: true,

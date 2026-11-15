@@ -13,15 +13,32 @@ export type Holdings = Record<string, Holding>;
 /** Latest price in USDT per coin, e.g. { BTC: 97000, ETH: 3400 } */
 export type Prices = Record<string, number>;
 
+export type Side = "BUY" | "SELL";
+
+/** A completed trade; stored as it happened, never changed */
+export interface Trade {
+  /** 1, 2, 3… */
+  id: number;
+  /** Unix time in ms */
+  time: number;
+  side: Side;
+  coin: string;
+  quantity: number;
+  /** USDT per coin */
+  price: number;
+}
+
 export interface Profile {
   /** Cash in USDT */
   balance: number;
   holdings: Holdings;
+  /** Oldest first */
+  trades: Trade[];
 }
 
 /** create new profile */
 export function createProfile(): Profile {
-  return { balance: STARTING_BALANCE, holdings: {} };
+  return { balance: STARTING_BALANCE, holdings: {}, trades: [] };
 }
 
 /** dummy data for initial testing */
@@ -33,6 +50,7 @@ export function createDemoProfile(): Profile {
       ETH: { quantity: 0.5, avgPrice: 2_000 },
       SOL: { quantity: 10, avgPrice: 80 },
     },
+    trades: [],
   };
 }
 
