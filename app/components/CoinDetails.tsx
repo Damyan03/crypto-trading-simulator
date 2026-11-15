@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import ErrorMessage from "~/components/ErrorMessage";
+import ReconnectingNote from "~/components/ReconnectingNote";
 import Stat from "~/components/Stat";
 import { getCoinStats, QUOTE, subscribeCoinStats, type CoinStats, type Pair } from "~/data/binance-api";
 import { getCoinInfo, type CoinInfo } from "~/data/coingecko-api";
@@ -82,7 +83,7 @@ export default function CoinDetails({ pair }: Props) {
         )}
       </dl>
 
-      {!live && <p className="mt-3 text-sm text-warning">Live updates paused, reconnecting…</p>}
+      {!live && <ReconnectingNote className="mt-3" />}
       {infoFailed && !info && (
         <p className="mt-3 text-sm text-muted-foreground">Name and market cap unavailable (CoinGecko didn't respond).</p>
       )}

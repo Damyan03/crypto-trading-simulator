@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { CandlestickSeries, ColorType, createChart, type UTCTimestamp } from "lightweight-charts";
 import ErrorMessage from "~/components/ErrorMessage";
+import ReconnectingNote from "~/components/ReconnectingNote";
 import { getCandles, subscribeCandles, type Candle, type Pair } from "~/data/binance-api";
 
 // 500 one-hour candles ≈ the last 3 weeks
@@ -105,7 +106,7 @@ export default function PriceChart({ pair }: Props) {
           <ErrorMessage message={error} onRetry={retry} />
         </div>
       )}
-      {!live && <p className="absolute left-3 top-3 text-sm text-warning">Live updates paused, reconnecting…</p>}
+      {!live && <ReconnectingNote className="absolute left-3 top-3" />}
     </div>
   );
 }

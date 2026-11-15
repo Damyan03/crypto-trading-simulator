@@ -1,20 +1,17 @@
 import { useEffect, useState } from "react";
-import { getPrices, getTradingPairs, subscribePrices, type Pair } from "~/data/binance-api";
+import { getPrices, subscribePrices } from "~/data/binance-api";
 import type { Prices } from "~/domain/profile";
-import { useProfile } from "./store";
 
-/** Live prices and pair info (for decimals) of every coin you hold */
-export function useHoldingPrices() {
-  const { profile } = useProfile();
+/** Prices of the given coins: fetched right away, then kept live by one stream */
+export function useLivePrices(coinList: string[]) {
   const [prices, setPrices] = useState<Prices>({});
-  const [pairs, setPairs] = useState<Record<string, Pair>>({});
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
   // false while the live connection is down and reconnecting
   const [live, setLive] = useState(true);
 
   // e.g. "BTC,ETH"; a string so the effects only rerun when the coins change
-  const coins = Object.keys(profile.holdings).join(",");
+  const coins = coinList.join(",");
 
   // REST: prices right away
   useEffect(() => {
@@ -35,16 +32,8 @@ export function useHoldingPrices() {
     );
   }, [coins]);
 
-  // decimals for formatting each coin (cached after the first load)
-  useEffect(() => {
-    if (!coins) return;
-    getTradingPairs()
-      .then((list) => setPairs(Object.fromEntries(list.map((p) => [p.coin, p]))))
-      .catch(() => {}); // formatting falls back to default decimals
-  }, [coins]);
-
   // reruns the REST request
   const retry = () => setAttempt((a) => a + 1);
 
-  return { prices, pairs, error, live, retry };
+  return { prices, error, live, retry };
 }

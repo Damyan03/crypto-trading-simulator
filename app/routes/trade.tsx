@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
 import CoinDetails from "~/components/CoinDetails";
 import ErrorMessage from "~/components/ErrorMessage";
 import HoldingsList from "~/components/HoldingsList";
 import PriceChart from "~/components/PriceChart";
-import { getTradingPairs, type Pair } from "~/data/binance-api";
-import { useHoldingPrices } from "~/state/holding-prices";
+import ReconnectingNote from "~/components/ReconnectingNote";
+import TradeForm from "~/components/TradeForm";
+import { useLivePrices } from "~/state/live-prices";
+import { usePairs } from "~/state/pairs";
 import { useProfile } from "~/state/store";
 import type { Route } from "./+types/trade";
 
@@ -12,22 +13,14 @@ export default function Trade({ params }: Route.ComponentProps) {
   // "/trade/btc" → "BTC"
   const coin = params.coin.toUpperCase();
   const { profile } = useProfile();
-  const { prices, pairs, error: pricesError, live, retry: retryPrices } = useHoldingPrices();
+  const { pairs, error, retry } = usePairs();
   // undefined = loading, null = not traded here
-  const [pair, setPair] = useState<Pair | null>();
-  const [error, setError] = useState<string | null>(null);
-  const [attempt, setAttempt] = useState(0);
+  const pair = pairs && (pairs[coin] ?? null);
 
-  // find the coin's pair once; the details and chart (and later the trade form) all need it
-  useEffect(() => {
-    setPair(undefined);
-    setError(null);
-    getTradingPairs()
-      .then((pairs) => setPair(pairs.find((p) => p.coin === coin) ?? null))
-      .catch((e: Error) => setError(e.message));
-  }, [coin, attempt]);
-
-  const retry = () => setAttempt((a) => a + 1);
+  // held coins plus this one (once it's known to be traded), on one live connection
+  const held = Object.keys(profile.holdings);
+  const coins = pair && !held.includes(coin) ? [...held, coin] : held;
+  const { prices, error: pricesError, live, retry: retryPrices } = useLivePrices(coins);
 
   return (
     <div className="flex h-full w-full bg-red-500">
@@ -51,12 +44,12 @@ export default function Trade({ params }: Route.ComponentProps) {
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto bg-surface">
           {pricesError && <ErrorMessage message={pricesError} onRetry={retryPrices} />}
-          {!live && <p className="p-4 text-sm text-warning">Live updates paused, reconnecting…</p>}
-          <HoldingsList holdings={profile.holdings} prices={prices} pairs={pairs} query="" />
+          {!live && <ReconnectingNote className="p-4" />}
+          <HoldingsList holdings={profile.holdings} prices={prices} pairs={pairs ?? {}} query="" />
         </div>
       </div>
       <div className="flex-1 bg-amber-500">
-        trading window
+        {pair && <TradeForm key={pair.symbol} pair={pair} price={prices[coin]} />}
       </div>
     </div>
   );

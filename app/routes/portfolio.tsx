@@ -2,13 +2,17 @@ import { useState } from "react";
 import ErrorMessage from "~/components/ErrorMessage";
 import HoldingsList from "~/components/HoldingsList";
 import PortfolioSummary from "~/components/PortfolioSummary";
+import ReconnectingNote from "~/components/ReconnectingNote";
 import SearchBox from "~/components/SearchBox";
-import { useHoldingPrices } from "~/state/holding-prices";
+import { useLivePrices } from "~/state/live-prices";
+import { usePairs } from "~/state/pairs";
 import { useProfile } from "~/state/store";
 
 export default function Portfolio() {
   const { profile } = useProfile();
-  const { prices, pairs, error, live, retry } = useHoldingPrices();
+  const { prices, error, live, retry } = useLivePrices(Object.keys(profile.holdings));
+  // decimals for formatting; if this fails, formatting falls back to default decimals
+  const { pairs = {} } = usePairs();
   // text in the search box, passed to the table as a filter
   const [query, setQuery] = useState("");
 
@@ -25,7 +29,7 @@ export default function Portfolio() {
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto bg-surface">
             {error && <ErrorMessage message={error} onRetry={retry} />}
-            {!live && <p className="p-4 text-sm text-warning">Live updates paused, reconnecting…</p>}
+            {!live && <ReconnectingNote className="p-4" />}
             <HoldingsList holdings={profile.holdings} prices={prices} pairs={pairs} query={query} />
           </div>
         </div>
