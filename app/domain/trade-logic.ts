@@ -12,9 +12,12 @@ export const tradeFee = (quantity: number, price: number) => quantity * price * 
 // strips float noise, e.g. 0.1 + 0.2 = 0.30000000000000004 → 0.3
 const clean = (value: number) => Number(value.toPrecision(12));
 
+/** Rounds down to `decimals`, e.g. to a coin's step size */
+export const roundDown = (value: number, decimals: number) =>
+  Math.floor(clean(value * 10 ** decimals)) / 10 ** decimals;
+
 /** How many coins `usdt` buys at `price`, rounded down to the coin's `decimals` */
-export const quantityFor = (usdt: number, price: number, decimals: number) =>
-  Math.floor(clean((usdt / price) * 10 ** decimals)) / 10 ** decimals;
+export const quantityFor = (usdt: number, price: number, decimals: number) => roundDown(usdt / price, decimals);
 
 /** Why the trade can't happen, or null if it can */
 export function validateTrade(profile: Profile, { side, coin, quantity, price }: TradeRequest): string | null {
