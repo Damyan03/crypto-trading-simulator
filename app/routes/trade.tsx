@@ -1,13 +1,18 @@
 import { useEffect, useState } from "react";
 import CoinDetails from "~/components/CoinDetails";
 import ErrorMessage from "~/components/ErrorMessage";
+import HoldingsList from "~/components/HoldingsList";
 import PriceChart from "~/components/PriceChart";
 import { getTradingPairs, type Pair } from "~/data/binance-api";
+import { useHoldingPrices } from "~/state/holding-prices";
+import { useProfile } from "~/state/store";
 import type { Route } from "./+types/trade";
 
 export default function Trade({ params }: Route.ComponentProps) {
   // "/trade/btc" → "BTC"
   const coin = params.coin.toUpperCase();
+  const { profile } = useProfile();
+  const { prices, pairs, error: pricesError, live, retry: retryPrices } = useHoldingPrices();
   // undefined = loading, null = not traded here
   const [pair, setPair] = useState<Pair | null>();
   const [error, setError] = useState<string | null>(null);
@@ -44,10 +49,10 @@ export default function Trade({ params }: Route.ComponentProps) {
             <div className="bg-gray-500 w-full">trade</div>
           </div>
         </div>
-        <div className="flex-1 bg-purple-500">
-          <div className="bg-pink-500 w-full">trade history</div>
-          <div className="bg-gray-500 w-full">trade history</div>
-          <div className="bg-indigo-500 w-full">trade history</div>
+        <div className="flex-1 min-h-0 overflow-y-auto bg-surface">
+          {pricesError && <ErrorMessage message={pricesError} onRetry={retryPrices} />}
+          {!live && <p className="p-4 text-sm text-warning">Live updates paused, reconnecting…</p>}
+          <HoldingsList holdings={profile.holdings} prices={prices} pairs={pairs} query="" />
         </div>
       </div>
       <div className="flex-1 bg-amber-500">

@@ -4,8 +4,8 @@ import { cached } from "./storage";
 
 // Binance public REST API, no key needed
 const BASE_URL = "https://api.binance.com/api/v3";
-// Binance live market data streams
-const STREAM_URL = "wss://stream.binance.com:9443/ws";
+// Binance live market data, combined streams: "/stream?streams=a/b/c"
+const STREAM_URL = "wss://stream.binance.com:9443/stream?streams=";
 const RECONNECT_DELAY = 3000;
 
 /** The only quote currency the app trades against */
@@ -171,7 +171,8 @@ export async function getCandles(symbol: string, interval: string, limit = 500):
 }
 
 /**
- * Opens a Binance stream, e.g. "btcusdt@ticker", and reconnects by itself if it drops.
+ * Opens Binance streams on one connection, e.g. "btcusdt@ticker" or "btcusdt@miniTicker/ethusdt@miniTicker",
+ * and reconnects by itself if it drops.
  * `onLiveChange` reports whether it's connected. Returns a function that closes it for good.
  */
 function subscribe<T>(stream: string, onMessage: (data: T) => void, onLiveChange: (live: boolean) => void) {
@@ -180,9 +181,10 @@ function subscribe<T>(stream: string, onMessage: (data: T) => void, onLiveChange
   let retryTimer: ReturnType<typeof setTimeout>;
 
   const connect = () => {
-    ws = new WebSocket(`${STREAM_URL}/${stream}`);
+    ws = new WebSocket(STREAM_URL + stream);
     ws.onopen = () => onLiveChange(true);
-    ws.onmessage = (event) => onMessage(JSON.parse(event.data) as T);
+    // combined streams wrap each message: { stream, data }
+    ws.onmessage = (event) => onMessage((JSON.parse(event.data) as { data: T }).data);
     // dropped (network, Binance's 24h limit…): try again unless we closed it ourselves
     ws.onclose = () => {
       if (stopped) return;
@@ -238,6 +240,18 @@ export const subscribeCandles = (
         low: Number(k.l),
         close: Number(k.c),
       }),
+    onLiveChange,
+  );
+
+/** Live price of each coin, about once a second, all on one connection */
+export const subscribePrices = (
+  coins: string[],
+  onUpdate: (coin: string, price: number) => void,
+  onLiveChange: (live: boolean) => void,
+) =>
+  subscribe<{ s: string; c: string }>(
+    coins.map((coin) => `${toSymbol(coin).toLowerCase()}@miniTicker`).join("/"),
+    (t) => onUpdate(toCoin(t.s), Number(t.c)),
     onLiveChange,
   );
 
