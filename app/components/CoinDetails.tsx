@@ -1,71 +1,51 @@
 import { useEffect, useState } from "react";
 import ErrorMessage from "~/components/ErrorMessage";
 import Stat from "~/components/Stat";
-import {
-  getCoinStats,
-  getTradingPairs,
-  QUOTE,
-  subscribeCoinStats,
-  type CoinStats,
-  type Pair,
-} from "~/data/binance-api";
+import { getCoinStats, QUOTE, subscribeCoinStats, type CoinStats, type Pair } from "~/data/binance-api";
 import { getCoinInfo, type CoinInfo } from "~/data/coingecko-api";
 import { changeColor, formatPercent, formatPrice, formatVolume } from "~/utils/format";
 
 interface Props {
-  /** e.g. "BTC" */
-  coin: string;
+  pair: Pair;
 }
 
 /** Price and 24h stats (Binance) plus general info (CoinGecko) for one coin */
-export default function CoinDetails({ coin }: Props) {
-  const [pair, setPair] = useState<Pair | null>(null);
+export default function CoinDetails({ pair }: Props) {
+  const { coin } = pair;
   const [stats, setStats] = useState<CoinStats | null>(null);
-  const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
   // undefined = loading, null = CoinGecko doesn't know the coin
   const [info, setInfo] = useState<CoinInfo | null>();
   const [infoFailed, setInfoFailed] = useState(false);
+  // false while the live connection is down and reconnecting
   const [live, setLive] = useState(true);
 
-  // Binance: check the coin is traded here, then load its 24h stats
+  // Binance REST: 24h stats right away
   useEffect(() => {
-    getTradingPairs()
-      .then((pairs) => {
-        const found = pairs.find((p) => p.coin === coin);
-        if (!found) {
-          setNotFound(true);
-          return;
-        }
-        setPair(found);
-        return getCoinStats(found.symbol).then(setStats);
-      })
+    getCoinStats(pair.symbol)
+      .then(setStats)
       .catch((e: Error) => setError(e.message));
-  }, [coin, attempt]);
+  }, [pair, attempt]);
 
-  // Binance stream: live stats once the pair is known; the cleanup closes the connection
-  useEffect(() => {
-    if (!pair) return;
-    return subscribeCoinStats(pair.symbol, setStats, setLive);
-  }, [pair]);
+  // Binance stream: live stats; the cleanup closes the connection
+  useEffect(() => subscribeCoinStats(pair.symbol, setStats, setLive), [pair]);
 
-  // CoinGecko: only for coins traded here; optional, the page still works if it fails
+  // CoinGecko: optional, the page still works if it fails
   useEffect(() => {
-    if (!pair) return;
     getCoinInfo(coin)
       .then(setInfo)
       .catch(() => setInfoFailed(true));
-  }, [coin, pair]);
+  }, [coin]);
 
   const retry = () => {
     setError(null);
     setAttempt((a) => a + 1);
   };
 
-  if (notFound) return <p className="p-4 text-muted-foreground">{coin} isn't traded on this platform.</p>;
-  if (error) return <ErrorMessage message={error} onRetry={retry} />;
-  if (!pair || !stats) return <p className="p-4 text-muted-foreground">Loading {coin}…</p>;
+  // the stream may still deliver stats even if the first request failed
+  if (error && !stats) return <ErrorMessage message={error} onRetry={retry} />;
+  if (!stats) return <p className="bg-surface p-4 text-muted-foreground">Loading {coin}…</p>;
 
   // "—" for values CoinGecko doesn't have
   const price = (value: number | null) => (value === null ? "—" : formatPrice(value, pair.priceDecimals));

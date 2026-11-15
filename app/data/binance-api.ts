@@ -41,6 +41,16 @@ interface Ticker {
 /** A pair together with its 24h stats */
 export type Market = Pair & Ticker;
 
+/** One candlestick; prices in USDT */
+export interface Candle {
+  /** Start time in seconds (Binance sends milliseconds) */
+  time: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+}
+
 /** One pair's full 24h stats, for the trade page */
 export interface CoinStats {
   lastPrice: number;
@@ -145,36 +155,34 @@ export async function getCoinStats(symbol: string): Promise<CoinStats> {
   };
 }
 
+/** Candles for one pair, oldest first, e.g. getCandles("BTCUSDT", "1h") */
+export async function getCandles(symbol: string, interval: string, limit = 500): Promise<Candle[]> {
+  // each kline is [openTime, open, high, low, close, volume, …]
+  const data = await get<[number, string, string, string, string][]>(
+    `/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`,
+  );
+  return data.map(([openTime, open, high, low, close]) => ({
+    time: openTime / 1000,
+    open: Number(open),
+    high: Number(high),
+    low: Number(low),
+    close: Number(close),
+  }));
+}
+
 /**
- * Live 24h stats for one pair, about once a second.
- * Reconnects by itself if the connection drops; `onLiveChange` reports whether it's connected.
- * Returns a function that closes the connection for good.
+ * Opens a Binance stream, e.g. "btcusdt@ticker", and reconnects by itself if it drops.
+ * `onLiveChange` reports whether it's connected. Returns a function that closes it for good.
  */
-export function subscribeCoinStats(
-  symbol: string,
-  onUpdate: (stats: CoinStats) => void,
-  onLiveChange: (live: boolean) => void,
-): () => void {
+function subscribe<T>(stream: string, onMessage: (data: T) => void, onLiveChange: (live: boolean) => void) {
   let ws: WebSocket;
   let stopped = false;
   let retryTimer: ReturnType<typeof setTimeout>;
 
   const connect = () => {
-    // stream names must be lowercase, e.g. "btcusdt@ticker"
-    ws = new WebSocket(`${STREAM_URL}/${symbol.toLowerCase()}@ticker`);
+    ws = new WebSocket(`${STREAM_URL}/${stream}`);
     ws.onopen = () => onLiveChange(true);
-    ws.onmessage = (event) => {
-      const t = JSON.parse(event.data);
-      onUpdate({
-        lastPrice: Number(t.c),
-        priceChangePercent: Number(t.P),
-        highPrice: Number(t.h),
-        lowPrice: Number(t.l),
-        volume: Number(t.v),
-        quoteVolume: Number(t.q),
-        trades: t.n,
-      });
-    };
+    ws.onmessage = (event) => onMessage(JSON.parse(event.data) as T);
     // dropped (network, Binance's 24h limit…): try again unless we closed it ourselves
     ws.onclose = () => {
       if (stopped) return;
@@ -190,6 +198,48 @@ export function subscribeCoinStats(
     ws.close();
   };
 }
+
+/** Live 24h stats for one pair, about once a second */
+export const subscribeCoinStats = (
+  symbol: string,
+  onUpdate: (stats: CoinStats) => void,
+  onLiveChange: (live: boolean) => void,
+) =>
+  // stream names must be lowercase
+  subscribe<{ c: string; P: string; h: string; l: string; v: string; q: string; n: number }>(
+    `${symbol.toLowerCase()}@ticker`,
+    (t) =>
+      onUpdate({
+        lastPrice: Number(t.c),
+        priceChangePercent: Number(t.P),
+        highPrice: Number(t.h),
+        lowPrice: Number(t.l),
+        volume: Number(t.v),
+        quoteVolume: Number(t.q),
+        trades: t.n,
+      }),
+    onLiveChange,
+  );
+
+/** Live updates of the current candle, every 2 seconds; a new start time means a new candle */
+export const subscribeCandles = (
+  symbol: string,
+  interval: string,
+  onUpdate: (candle: Candle) => void,
+  onLiveChange: (live: boolean) => void,
+) =>
+  subscribe<{ k: { t: number; o: string; h: string; l: string; c: string } }>(
+    `${symbol.toLowerCase()}@kline_${interval}`,
+    ({ k }) =>
+      onUpdate({
+        time: k.t / 1000,
+        open: Number(k.o),
+        high: Number(k.h),
+        low: Number(k.l),
+        close: Number(k.c),
+      }),
+    onLiveChange,
+  );
 
 /** Latest price per coin */
 export async function getPrices(coins: string[]): Promise<Prices> {
