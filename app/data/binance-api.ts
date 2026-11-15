@@ -1,3 +1,4 @@
+import type { Depth } from "~/domain/order-book";
 import type { Prices } from "~/domain/profile";
 import { getJson } from "./http";
 import { cached } from "./storage";
@@ -7,6 +8,8 @@ const BASE_URL = "https://api.binance.com/api/v3";
 // Binance live market data, combined streams: "/stream?streams=a/b/c"
 const STREAM_URL = "wss://stream.binance.com:9443/stream?streams=";
 const RECONNECT_DELAY = 3000;
+// order book snapshot levels per side: the most Binance allows (weight 250), deep enough for coarse price groups
+const BOOK_LIMIT = 5000;
 
 /** The only quote currency the app trades against */
 export const QUOTE = "USDT";
@@ -64,22 +67,6 @@ export interface CoinStats {
   /** Number of trades */
   trades: number;
 }
-
-/** One order book price level */
-export interface DepthLevel {
-  price: number;
-  /** Coins waiting to be bought (bid) or sold (ask) at this price */
-  quantity: number;
-}
-
-/** Top of the order book; best price first on both sides */
-export interface Depth {
-  bids: DepthLevel[];
-  asks: DepthLevel[];
-}
-
-/** Levels per side the depth stream supports */
-export type DepthLevels = 5 | 10 | 20;
 
 // "BTC" → "BTCUSDT"
 const toSymbol = (coin: string) => coin + QUOTE;
@@ -278,27 +265,108 @@ export async function getPrices(coins: string[]): Promise<Prices> {
   return Object.fromEntries(data.map((d) => [toCoin(d.symbol), Number(d.price)]));
 }
 
-/** Binance's order book: [price, quantity] strings */
-type RawDepth = { bids: [string, string][]; asks: [string, string][] };
+/** Order book levels: [price, quantity] strings */
+type RawLevels = [string, string][];
 
-/** The docs don't state an order, so it's sorted here */
-function toDepth(data: RawDepth): Depth {
-  const levels = (list: [string, string][]) =>
-    list.map(([price, quantity]) => ({ price: Number(price), quantity: Number(quantity) }));
-  return {
-    bids: levels(data.bids).sort((a, b) => b.price - a.price),
-    asks: levels(data.asks).sort((a, b) => a.price - b.price),
-  };
+/** One change event from the diff depth stream */
+interface DepthUpdate {
+  /** First update ID in the event */
+  U: number;
+  /** Final update ID in the event */
+  u: number;
+  b: RawLevels;
+  a: RawLevels;
 }
 
-/** Order book snapshot for one pair */
-export const getDepth = async (symbol: string, levels: DepthLevels) =>
-  toDepth(await get<RawDepth>(`/depth?symbol=${symbol}&limit=${levels}`));
+/** Sets each level's new quantity; 0 removes the level */
+function setLevels(book: Map<number, number>, levels: RawLevels) {
+  for (const [price, quantity] of levels) {
+    if (Number(quantity) === 0) book.delete(Number(price));
+    else book.set(Number(price), Number(quantity));
+  }
+}
 
-/** Live order book snapshot, every second */
-export const subscribeDepth = (
+/** Sorted with `order` (the docs don't state one) */
+const toLevels = (book: Map<number, number>, order: (a: number, b: number) => number) =>
+  [...book].sort(([a], [b]) => order(a, b)).map(([price, quantity]) => ({ price, quantity }));
+
+/**
+ * Live local order book, kept in sync as Binance's docs describe ("How to manage a local order book correctly"):
+ * buffer stream events, load a snapshot, then apply the buffered and every new change; missed events start over.
+ * Returns a function that closes it.
+ */
+export function subscribeOrderBook(
   symbol: string,
-  levels: DepthLevels,
   onUpdate: (depth: Depth) => void,
   onLiveChange: (live: boolean) => void,
-) => subscribe<RawDepth>(`${symbol.toLowerCase()}@depth${levels}`, (d) => onUpdate(toDepth(d)), onLiveChange);
+  onError: (message: string) => void,
+) {
+  const bids = new Map<number, number>();
+  const asks = new Map<number, number>();
+  // update ID of the local book
+  let bookId = 0;
+  // events wait here while a snapshot loads; null once the book is in sync
+  let buffer: DepthUpdate[] | null = [];
+  let stopped = false;
+
+  const emit = () => onUpdate({ bids: toLevels(bids, (a, b) => b - a), asks: toLevels(asks, (a, b) => a - b) });
+
+  const loadSnapshot = async (): Promise<void> => {
+    try {
+      const snapshot = await get<{ lastUpdateId: number; bids: RawLevels; asks: RawLevels }>(
+        `/depth?symbol=${symbol}&limit=${BOOK_LIMIT}`,
+      );
+      if (stopped || !buffer) return;
+      // older than the first buffered event: fetch again
+      if (snapshot.lastUpdateId < buffer[0].U) return loadSnapshot();
+      bids.clear();
+      asks.clear();
+      setLevels(bids, snapshot.bids);
+      setLevels(asks, snapshot.asks);
+      bookId = snapshot.lastUpdateId;
+      const pending = buffer;
+      buffer = null;
+      // skips events the snapshot already includes
+      pending.filter((event) => event.u > bookId).forEach(handle);
+      if (!buffer) emit();
+    } catch (e) {
+      if (stopped) return;
+      // can't sync without a snapshot; Retry opens a new connection
+      stopped = true;
+      unsubscribe();
+      onError((e as Error).message);
+    }
+  };
+
+  const handle = (event: DepthUpdate) => {
+    if (buffer) {
+      // the first buffered event starts loading a snapshot
+      if (buffer.push(event) === 1) loadSnapshot();
+      return;
+    }
+    if (event.u < bookId) return;
+    if (event.U > bookId + 1) {
+      // missed events (e.g. after a reconnect): start over
+      buffer = [];
+      handle(event);
+      return;
+    }
+    setLevels(bids, event.b);
+    setLevels(asks, event.a);
+    bookId = event.u;
+  };
+
+  const unsubscribe = subscribe<DepthUpdate>(
+    `${symbol.toLowerCase()}@depth`,
+    (event) => {
+      handle(event);
+      if (!buffer) emit();
+    },
+    onLiveChange,
+  );
+
+  return () => {
+    stopped = true;
+    unsubscribe();
+  };
+}
