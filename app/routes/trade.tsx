@@ -2,6 +2,7 @@ import { useState } from "react";
 import CoinDetails from "~/components/CoinDetails";
 import ErrorMessage from "~/components/ErrorMessage";
 import HoldingsList from "~/components/HoldingsList";
+import OrderBook from "~/components/OrderBook";
 import PortfolioTabs, { type PortfolioTab } from "~/components/PortfolioTabs";
 import PriceChart from "~/components/PriceChart";
 import ReconnectingNote from "~/components/ReconnectingNote";
@@ -40,10 +41,8 @@ export default function Trade({ params }: Route.ComponentProps) {
             </div>
             <div className="bg-orange-500 flex-1 min-h-0">{pair && <PriceChart key={pair.symbol} pair={pair} />}</div>
           </div>
-          <div className="flex-1 bg-cyan-500 h-full">
-            <div className="bg-purple-500 w-full">trade</div>
-            <div className="bg-pink-500 w-full">trade</div>
-            <div className="bg-gray-500 w-full">trade</div>
+          <div className="flex-1 min-w-0 bg-cyan-500 h-full">
+            {pair && <OrderBook key={pair.symbol} pair={pair} price={prices[coin]} />}
           </div>
         </div>
         <div className="flex flex-col flex-1 min-h-0 bg-surface">

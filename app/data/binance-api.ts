@@ -65,6 +65,22 @@ export interface CoinStats {
   trades: number;
 }
 
+/** One order book price level */
+export interface DepthLevel {
+  price: number;
+  /** Coins waiting to be bought (bid) or sold (ask) at this price */
+  quantity: number;
+}
+
+/** Top of the order book; best price first on both sides */
+export interface Depth {
+  bids: DepthLevel[];
+  asks: DepthLevel[];
+}
+
+/** Levels per side the depth stream supports */
+export type DepthLevels = 5 | 10 | 20;
+
 // "BTC" → "BTCUSDT"
 const toSymbol = (coin: string) => coin + QUOTE;
 // "BTCUSDT" → "BTC"
@@ -261,3 +277,28 @@ export async function getPrices(coins: string[]): Promise<Prices> {
   const data = await get<{ symbol: string; price: string }[]>(`/ticker/price?symbols=${symbols}`);
   return Object.fromEntries(data.map((d) => [toCoin(d.symbol), Number(d.price)]));
 }
+
+/** Binance's order book: [price, quantity] strings */
+type RawDepth = { bids: [string, string][]; asks: [string, string][] };
+
+/** The docs don't state an order, so it's sorted here */
+function toDepth(data: RawDepth): Depth {
+  const levels = (list: [string, string][]) =>
+    list.map(([price, quantity]) => ({ price: Number(price), quantity: Number(quantity) }));
+  return {
+    bids: levels(data.bids).sort((a, b) => b.price - a.price),
+    asks: levels(data.asks).sort((a, b) => a.price - b.price),
+  };
+}
+
+/** Order book snapshot for one pair */
+export const getDepth = async (symbol: string, levels: DepthLevels) =>
+  toDepth(await get<RawDepth>(`/depth?symbol=${symbol}&limit=${levels}`));
+
+/** Live order book snapshot, every second */
+export const subscribeDepth = (
+  symbol: string,
+  levels: DepthLevels,
+  onUpdate: (depth: Depth) => void,
+  onLiveChange: (live: boolean) => void,
+) => subscribe<RawDepth>(`${symbol.toLowerCase()}@depth${levels}`, (d) => onUpdate(toDepth(d)), onLiveChange);
