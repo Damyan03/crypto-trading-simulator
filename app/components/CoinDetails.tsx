@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
 import ErrorMessage from "~/components/ErrorMessage";
 import Stat from "~/components/Stat";
-import { getCoinStats, getTradingPairs, QUOTE, type CoinStats, type Pair } from "~/data/binance-api";
+import {
+  getCoinStats,
+  getTradingPairs,
+  QUOTE,
+  subscribeCoinStats,
+  type CoinStats,
+  type Pair,
+} from "~/data/binance-api";
 import { getCoinInfo, type CoinInfo } from "~/data/coingecko-api";
 import { changeColor, formatPercent, formatPrice, formatVolume } from "~/utils/format";
 
@@ -20,6 +27,7 @@ export default function CoinDetails({ coin }: Props) {
   // undefined = loading, null = CoinGecko doesn't know the coin
   const [info, setInfo] = useState<CoinInfo | null>();
   const [infoFailed, setInfoFailed] = useState(false);
+  const [live, setLive] = useState(true);
 
   // Binance: check the coin is traded here, then load its 24h stats
   useEffect(() => {
@@ -35,6 +43,12 @@ export default function CoinDetails({ coin }: Props) {
       })
       .catch((e: Error) => setError(e.message));
   }, [coin, attempt]);
+
+  // Binance stream: live stats once the pair is known; the cleanup closes the connection
+  useEffect(() => {
+    if (!pair) return;
+    return subscribeCoinStats(pair.symbol, setStats, setLive);
+  }, [pair]);
 
   // CoinGecko: only for coins traded here; optional, the page still works if it fails
   useEffect(() => {
@@ -88,6 +102,7 @@ export default function CoinDetails({ coin }: Props) {
         )}
       </dl>
 
+      {!live && <p className="mt-3 text-sm text-warning">Live updates paused, reconnecting…</p>}
       {infoFailed && !info && (
         <p className="mt-3 text-sm text-muted-foreground">Name and market cap unavailable (CoinGecko didn't respond).</p>
       )}

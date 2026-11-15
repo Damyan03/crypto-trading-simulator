@@ -4,6 +4,9 @@ import { cached } from "./storage";
 
 // Binance public REST API, no key needed
 const BASE_URL = "https://api.binance.com/api/v3";
+// Binance live market data streams
+const STREAM_URL = "wss://stream.binance.com:9443/ws";
+const RECONNECT_DELAY = 3000;
 
 /** The only quote currency the app trades against */
 export const QUOTE = "USDT";
@@ -139,6 +142,52 @@ export async function getCoinStats(symbol: string): Promise<CoinStats> {
     volume: Number(t.volume),
     quoteVolume: Number(t.quoteVolume),
     trades: t.count,
+  };
+}
+
+/**
+ * Live 24h stats for one pair, about once a second.
+ * Reconnects by itself if the connection drops; `onLiveChange` reports whether it's connected.
+ * Returns a function that closes the connection for good.
+ */
+export function subscribeCoinStats(
+  symbol: string,
+  onUpdate: (stats: CoinStats) => void,
+  onLiveChange: (live: boolean) => void,
+): () => void {
+  let ws: WebSocket;
+  let stopped = false;
+  let retryTimer: ReturnType<typeof setTimeout>;
+
+  const connect = () => {
+    // stream names must be lowercase, e.g. "btcusdt@ticker"
+    ws = new WebSocket(`${STREAM_URL}/${symbol.toLowerCase()}@ticker`);
+    ws.onopen = () => onLiveChange(true);
+    ws.onmessage = (event) => {
+      const t = JSON.parse(event.data);
+      onUpdate({
+        lastPrice: Number(t.c),
+        priceChangePercent: Number(t.P),
+        highPrice: Number(t.h),
+        lowPrice: Number(t.l),
+        volume: Number(t.v),
+        quoteVolume: Number(t.q),
+        trades: t.n,
+      });
+    };
+    // dropped (network, Binance's 24h limit…): try again unless we closed it ourselves
+    ws.onclose = () => {
+      if (stopped) return;
+      onLiveChange(false);
+      retryTimer = setTimeout(connect, RECONNECT_DELAY);
+    };
+  };
+
+  connect();
+  return () => {
+    stopped = true;
+    clearTimeout(retryTimer);
+    ws.close();
   };
 }
 
