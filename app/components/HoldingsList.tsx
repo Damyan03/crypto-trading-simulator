@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { QUOTE, type Pair } from "~/data/api";
 import type { Holdings, Prices } from "~/domain/profile";
 import {
@@ -9,6 +9,7 @@ import {
   formatSignedUsdt,
   formatUsdt,
 } from "~/utils/format";
+import { tradePath } from "~/utils/paths";
 import { matchesSearch } from "~/utils/search";
 
 interface Props {
@@ -22,6 +23,8 @@ interface Props {
 
 /** Table of owned coins with their value and profit/loss */
 export default function HoldingsList({ holdings, prices, pairs, query }: Props) {
+  const navigate = useNavigate();
+
   if (Object.keys(holdings).length === 0) {
     return (
       <p className="p-4 text-muted-foreground">
@@ -66,7 +69,11 @@ export default function HoldingsList({ holdings, prices, pairs, query }: Props) 
       </thead>
       <tbody>
         {rows.map((r) => (
-          <tr key={r.coin} className="border-b tabular-nums">
+          <tr
+            key={r.coin}
+            onClick={() => navigate(tradePath(r.coin))}
+            className="cursor-pointer border-b tabular-nums hover:bg-muted"
+          >
             <td className="px-4 py-3 text-left font-semibold">{r.coin}</td>
             <td className={td}>{formatQuantity(r.quantity, r.pair?.quantityDecimals)}</td>
             <td className={td}>{formatPrice(r.avgPrice, r.pair?.priceDecimals)}</td>

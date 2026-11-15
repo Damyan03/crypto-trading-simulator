@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router";
 import ErrorMessage from "~/components/ErrorMessage";
 import { getMarkets, QUOTE, type Market } from "~/data/api";
 import { changeColor, formatPercent, formatPrice, formatVolume } from "~/utils/format";
+import { tradePath } from "~/utils/paths";
 import { matchesSearch } from "~/utils/search";
 
 // most traded first
@@ -14,6 +16,7 @@ interface Props {
 
 /** All USDT pairs with price, 24h change and volume */
 export default function CoinList({ query }: Props) {
+  const navigate = useNavigate();
   const [markets, setMarkets] = useState<Market[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   // changing this reruns the effect, i.e. loads again
@@ -60,7 +63,11 @@ export default function CoinList({ query }: Props) {
           </thead>
           <tbody>
             {visible.map((m) => (
-              <tr key={m.symbol} className="border-b tabular-nums">
+              <tr
+                key={m.symbol}
+                onClick={() => navigate(tradePath(m.coin))}
+                className="cursor-pointer border-b tabular-nums hover:bg-muted"
+              >
                 <td className="px-4 py-3 text-left">
                   <span className="font-semibold">{m.coin}</span>
                   <span className="ml-2 text-sm text-muted-foreground">/{QUOTE}</span>
