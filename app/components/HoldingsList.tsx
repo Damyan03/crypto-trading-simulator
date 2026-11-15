@@ -9,18 +9,33 @@ import {
   formatSignedUsdt,
   formatUsdt,
 } from "~/utils/format";
+import { matchesSearch } from "~/utils/search";
 
 interface Props {
   holdings: Holdings;
   prices: Prices;
   /** Keyed by coin, e.g. "BTC" */
   pairs: Record<string, Pair>;
+  /** Search box text */
+  query: string;
 }
 
 /** Table of owned coins with their value and profit/loss */
-export default function HoldingsList({ holdings, prices, pairs }: Props) {
-  // one row per coin; values are null until its price is loaded
+export default function HoldingsList({ holdings, prices, pairs, query }: Props) {
+  if (Object.keys(holdings).length === 0) {
+    return (
+      <p className="p-4 text-muted-foreground">
+        No holdings yet.{" "}
+        <Link to="/" className="text-primary hover:underline">
+          Discover coins
+        </Link>
+      </p>
+    );
+  }
+
+  // one row per matching coin; values are null until its price is loaded
   const rows = Object.entries(holdings)
+    .filter(([coin]) => matchesSearch(coin, query))
     .map(([coin, { quantity, avgPrice }]) => {
       const price = prices[coin];
       const value = price === undefined ? null : quantity * price;
@@ -31,16 +46,7 @@ export default function HoldingsList({ holdings, prices, pairs }: Props) {
     // biggest position first
     .sort((a, b) => (b.value ?? 0) - (a.value ?? 0));
 
-  if (rows.length === 0) {
-    return (
-      <p className="p-4 text-muted-foreground">
-        No holdings yet.{" "}
-        <Link to="/" className="text-primary hover:underline">
-          Discover coins
-        </Link>
-      </p>
-    );
-  }
+  if (rows.length === 0) return <p className="p-4 text-muted-foreground">No holdings match "{query}".</p>;
 
   // shared cell styles
   const th = "px-4 py-2 text-right font-normal whitespace-nowrap";

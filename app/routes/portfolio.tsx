@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import ErrorMessage from "~/components/ErrorMessage";
 import HoldingsList from "~/components/HoldingsList";
 import PortfolioSummary from "~/components/PortfolioSummary";
+import SearchBox from "~/components/SearchBox";
 import { getPrices, getTradingPairs, type Pair } from "~/data/api";
 import type { Prices } from "~/domain/profile";
 import { useProfile } from "~/state/store";
@@ -12,6 +13,8 @@ export default function Portfolio() {
   const [pairs, setPairs] = useState<Record<string, Pair>>({});
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
+  // text in the search box, passed to the table as a filter
+  const [query, setQuery] = useState("");
 
   // e.g. "BTC,ETH"; a string so the effects only rerun when the coins change
   const coins = Object.keys(profile.holdings).join(",");
@@ -44,10 +47,12 @@ export default function Portfolio() {
         </div>
         <div className="flex flex-col flex-1 min-h-0 bg-orange-500">
           <div className="p-4 bg-emerald-500 w-full h-1/10">active / history</div>
-          <div className="p-4 bg-purple-500 w-full h-1/10">search N Filter</div>
+          <div className="flex items-center px-4 bg-purple-500 w-full h-1/10">
+            <SearchBox value={query} onChange={setQuery} />
+          </div>
           <div className="flex-1 min-h-0 overflow-y-auto bg-surface">
             {error && <ErrorMessage message={error} onRetry={retry} />}
-            <HoldingsList holdings={profile.holdings} prices={prices} pairs={pairs} />
+            <HoldingsList holdings={profile.holdings} prices={prices} pairs={pairs} query={query} />
           </div>
         </div>
       </div>

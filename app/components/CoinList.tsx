@@ -2,12 +2,18 @@ import { useEffect, useMemo, useState } from "react";
 import ErrorMessage from "~/components/ErrorMessage";
 import { getMarkets, QUOTE, type Market } from "~/data/api";
 import { changeColor, formatPercent, formatPrice, formatVolume } from "~/utils/format";
+import { matchesSearch } from "~/utils/search";
 
 // most traded first
 const byVolume = (a: Market, b: Market) => b.quoteVolume - a.quoteVolume;
 
+interface Props {
+  /** Search box text */
+  query: string;
+}
+
 /** All USDT pairs with price, 24h change and volume */
-export default function CoinList() {
+export default function CoinList({ query }: Props) {
   const [markets, setMarkets] = useState<Market[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   // changing this reruns the effect, i.e. loads again
@@ -21,6 +27,8 @@ export default function CoinList() {
 
   // sorts a copy, only when the data changes
   const sorted = useMemo(() => markets && [...markets].sort(byVolume), [markets]);
+  // only the coins matching the search
+  const visible = sorted ? sorted.filter((m) => matchesSearch(m.coin, query)) : null;
 
   const retry = () => {
     setError(null);
@@ -35,9 +43,12 @@ export default function CoinList() {
     <div className="h-full overflow-y-auto bg-surface text-foreground">
       {!sorted && !error && <p className="p-4 text-muted-foreground">Loading coins…</p>}
       {sorted?.length === 0 && <p className="p-4 text-muted-foreground">No coins available.</p>}
+      {sorted && sorted.length > 0 && visible?.length === 0 && (
+        <p className="p-4 text-muted-foreground">No coins match "{query}".</p>
+      )}
       {error && <ErrorMessage message={error} onRetry={retry} />}
 
-      {sorted && sorted.length > 0 && (
+      {visible && visible.length > 0 && (
         <table className="w-full">
           <thead className="sticky top-0 bg-muted text-xs text-muted-foreground">
             <tr>
@@ -48,7 +59,7 @@ export default function CoinList() {
             </tr>
           </thead>
           <tbody>
-            {sorted.map((m) => (
+            {visible.map((m) => (
               <tr key={m.symbol} className="border-b tabular-nums">
                 <td className="px-4 py-3 text-left">
                   <span className="font-semibold">{m.coin}</span>
