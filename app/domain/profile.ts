@@ -43,19 +43,6 @@ export function createProfile(): Profile {
   return { balance: STARTING_BALANCE, holdings: {}, trades: [] };
 }
 
-/** dummy data for initial testing */
-export function createDemoProfile(): Profile {
-  return {
-    balance: 7_000,
-    holdings: {
-      BTC: { quantity: 0.02, avgPrice: 60_000 },
-      ETH: { quantity: 0.5, avgPrice: 2_000 },
-      SOL: { quantity: 10, avgPrice: 80 },
-    },
-    trades: [],
-  };
-}
-
 /** cash + holdings total value */
 export function totalValue(profile: Profile, prices: Prices): number | null {
   let total = profile.balance;

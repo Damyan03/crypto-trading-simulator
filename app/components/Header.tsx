@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import ProfileMenu from "~/components/ProfileMenu";
 import { QUOTE } from "~/data/binance-api";
 import { useProfile } from "~/state/store";
 import { formatUsdt } from "~/utils/format";
@@ -21,7 +22,7 @@ export default function Header() {
       <div className="ml-auto tabular-nums">
         {formatUsdt(profile.balance)} {QUOTE}
       </div>
-      <div className="ml-4">profile</div>
+      <ProfileMenu />
     </header>
   );
 }

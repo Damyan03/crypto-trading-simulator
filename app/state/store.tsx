@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { load, save } from "~/data/storage";
-import { createDemoProfile, createProfile, type Profile, type Trade } from "~/domain/profile";
+import { createDemoProfile } from "~/domain/demo";
+import { createProfile, type Profile, type Trade } from "~/domain/profile";
 
 // Bump the version when the Profile shape changes; old saves are then ignored
 const STORAGE_KEY = "profile";
@@ -12,6 +13,8 @@ interface ProfileState {
   setProfile: (profile: Profile) => void;
   /** Back to 10,000 USDT, no holdings or trades */
   reset: () => void;
+  /** Replaces the account with the demo account */
+  resetToDemo: () => void;
 }
 
 // Shares the profile with every component inside ProfileProvider
@@ -39,8 +42,8 @@ export function parseProfile(raw: unknown): Profile | null {
   return valid ? { balance: balance as number, holdings, trades } : null;
 }
 
-/** Saved profile, or the demo profile if there's no valid one */
-const loadProfile = () => parseProfile(load(STORAGE_KEY, STORAGE_VERSION)) ?? createDemoProfile();
+/** Saved profile, or a new one if there's no valid one */
+const loadProfile = () => parseProfile(load(STORAGE_KEY, STORAGE_VERSION)) ?? createProfile();
 
 /** Holds the profile and saves every change */
 export function ProfileProvider({ children }: { children: ReactNode }) {
@@ -49,8 +52,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   useEffect(() => save(STORAGE_KEY, STORAGE_VERSION, profile), [profile]);
 
   const reset = () => setProfile(createProfile());
+  const resetToDemo = () => setProfile(createDemoProfile());
 
-  return <ProfileContext.Provider value={{ profile, setProfile, reset }}>{children}</ProfileContext.Provider>;
+  return (
+    <ProfileContext.Provider value={{ profile, setProfile, reset, resetToDemo }}>{children}</ProfileContext.Provider>
+  );
 }
 
 /** Reads the profile in any component inside ProfileProvider */
