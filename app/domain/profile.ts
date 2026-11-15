@@ -1,3 +1,4 @@
+/** Every account starts with this much USDT */
 export const STARTING_BALANCE = 10_000;
 
 export interface Holding {
@@ -13,6 +14,7 @@ export type Holdings = Record<string, Holding>;
 export type Prices = Record<string, number>;
 
 export interface Profile {
+  /** Cash in USDT */
   balance: number;
   holdings: Holdings;
 }
@@ -22,12 +24,24 @@ export function createProfile(): Profile {
   return { balance: STARTING_BALANCE, holdings: {} };
 }
 
+/** dummy data for initial testing */
+export function createDemoProfile(): Profile {
+  return {
+    balance: 7_000,
+    holdings: {
+      BTC: { quantity: 0.02, avgPrice: 60_000 },
+      ETH: { quantity: 0.5, avgPrice: 2_000 },
+      SOL: { quantity: 10, avgPrice: 80 },
+    },
+  };
+}
+
 /** cash + holdings total value */
 export function totalValue(profile: Profile, prices: Prices): number | null {
   let total = profile.balance;
-  for (const [symbol, { quantity }] of Object.entries(profile.holdings)) {
-    const price = prices[symbol];
-    if (price === undefined) return null;
+  for (const [coin, { quantity }] of Object.entries(profile.holdings)) {
+    const price = prices[coin];
+    if (price === undefined) return null; // price not loaded yet
     total += quantity * price;
   }
   return total;

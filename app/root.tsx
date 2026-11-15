@@ -9,6 +9,7 @@ import {
 
 import type { Route } from "./+types/root";
 import Header from "~/components/Header";
+import { ProfileProvider } from "~/state/store";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -44,12 +45,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <div className="flex h-dvh flex-col">
-      <Header />
-      <main className="min-h-0 flex-1 overflow-y-auto">
-        <Outlet />
-      </main>
-    </div>
+    // gives the header and every page access to the profile
+    <ProfileProvider>
+      <div className="flex h-dvh flex-col">
+        <Header />
+        <main className="min-h-0 flex-1 overflow-y-auto">
+          <Outlet />
+        </main>
+      </div>
+    </ProfileProvider>
   );
 }
 
