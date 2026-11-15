@@ -27,3 +27,24 @@ export function save<T>(key: string, version: number, data: T) {
     // storage full or blocked
   }
 }
+
+// Fetches in progress, shared so the same data is never downloaded twice at once
+const inFlight = new Map<string, Promise<unknown>>();
+
+/** Saved data if it's fresh, otherwise fetches and saves it (null results aren't saved) */
+export function cached<T>(key: string, version: number, maxAgeMs: number, fetcher: () => Promise<T>): Promise<T> {
+  const saved = load<T>(key, version, maxAgeMs);
+  if (saved !== null) return Promise.resolve(saved);
+
+  let request = inFlight.get(key) as Promise<T> | undefined;
+  if (!request) {
+    request = fetcher()
+      .then((data) => {
+        if (data !== null) save(key, version, data);
+        return data;
+      })
+      .finally(() => inFlight.delete(key));
+    inFlight.set(key, request);
+  }
+  return request;
+}

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import ErrorMessage from "~/components/ErrorMessage";
-import { getMarkets, QUOTE, type Market } from "~/data/api";
+import { getMarkets, QUOTE, type Market } from "~/data/binance-api";
 import { changeColor, formatPercent, formatPrice, formatVolume } from "~/utils/format";
 import { tradePath } from "~/utils/paths";
 import { matchesSearch } from "~/utils/search";

@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { QUOTE } from "~/data/api";
+import { QUOTE } from "~/data/binance-api";
 import { useProfile } from "~/state/store";
 import { formatUsdt } from "~/utils/format";
 

@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router";
-import { QUOTE, type Pair } from "~/data/api";
+import { QUOTE, type Pair } from "~/data/binance-api";
 import type { Holdings, Prices } from "~/domain/profile";
 import {
   changeColor,

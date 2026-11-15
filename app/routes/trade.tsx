@@ -1,3 +1,4 @@
+import CoinDetails from "~/components/CoinDetails";
 import type { Route } from "./+types/trade";
 
 export default function Trade({ params }: Route.ComponentProps) {
@@ -8,9 +9,12 @@ export default function Trade({ params }: Route.ComponentProps) {
     <div className="flex h-full w-full bg-red-500">
       <div className="flex flex-col w-9/12 h-full bg-green-500">
         <div className="flex w-full h-9/12 bg-blue-500">
-          <div className="items-center justify-center w-4/5 bg-yellow-500 h-full">
-            <div className="items-center justify-center w-full bg-green-500 h-1/5">Crypto info: {coin}</div>
-            <div className="bg-orange-500 flex-1 h-full">Chart</div>
+          <div className="flex flex-col w-4/5 bg-yellow-500 h-full">
+            <div className="w-full bg-green-500">
+              {/* key: a new coin starts with fresh state instead of showing the previous coin's data */}
+              <CoinDetails key={coin} coin={coin} />
+            </div>
+            <div className="bg-orange-500 flex-1 min-h-0">Chart</div>
           </div>
           <div className="flex-1 bg-cyan-500 h-full">
             <div className="bg-purple-500 w-full">trade</div>

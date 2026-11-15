@@ -1,5 +1,6 @@
 import type { Prices } from "~/domain/profile";
-import { load, save } from "./storage";
+import { getJson } from "./http";
+import { cached } from "./storage";
 
 // Binance public REST API, no key needed
 const BASE_URL = "https://api.binance.com/api/v3";
@@ -25,7 +26,7 @@ export interface Pair {
 }
 
 /** A pair's last 24 hours */
-export interface Ticker {
+interface Ticker {
   symbol: string;
   lastPrice: number;
   /** e.g. -2.5 for -2.5% */
@@ -37,22 +38,27 @@ export interface Ticker {
 /** A pair together with its 24h stats */
 export type Market = Pair & Ticker;
 
+/** One pair's full 24h stats, for the trade page */
+export interface CoinStats {
+  lastPrice: number;
+  priceChangePercent: number;
+  highPrice: number;
+  lowPrice: number;
+  /** Traded amount in the coin */
+  volume: number;
+  /** Traded amount in USDT */
+  quoteVolume: number;
+  /** Number of trades */
+  trades: number;
+}
+
 // "BTC" → "BTCUSDT"
 const toSymbol = (coin: string) => coin + QUOTE;
 // "BTCUSDT" → "BTC"
 const toCoin = (symbol: string) => symbol.slice(0, -QUOTE.length);
 
-/** Generic GET request to Binance API */
-async function get<T>(path: string): Promise<T> {
-  let res: Response;
-  try {
-    res = await fetch(`${BASE_URL}${path}`);
-  } catch {
-    throw new Error("Can't reach Binance. Check your connection.");
-  }
-  if (!res.ok) throw new Error(`Binance request failed (${res.status})`);
-  return res.json() as Promise<T>;
-}
+/** GET request to Binance API */
+const get = <T>(path: string) => getJson<T>(BASE_URL + path, "Binance");
 
 /** Counts decimal steps in a string, e.g. "0.00100" => 3 */
 const countDecimals = (step: string) => step.replace(/0+$/, "").split(".")[1]?.length ?? 0;
@@ -82,27 +88,11 @@ async function fetchTradingPairs(): Promise<Pair[]> {
     });
 }
 
-// Download in progress, shared so two callers don't download twice
-let pairsRequest: Promise<Pair[]> | null = null;
-
 /** Spot pairs trading against QUOTE, cached for an hour */
-export function getTradingPairs(): Promise<Pair[]> {
-  const cached = load<Pair[]>(PAIRS_KEY, PAIRS_VERSION, PAIRS_MAX_AGE);
-  if (cached) return Promise.resolve(cached);
-
-  pairsRequest ??= fetchTradingPairs()
-    .then((pairs) => {
-      save(PAIRS_KEY, PAIRS_VERSION, pairs);
-      return pairs;
-    })
-    .finally(() => {
-      pairsRequest = null;
-    });
-  return pairsRequest;
-}
+export const getTradingPairs = () => cached(PAIRS_KEY, PAIRS_VERSION, PAIRS_MAX_AGE, fetchTradingPairs);
 
 /** 24h stats for every pair */
-export async function getTickers(): Promise<Ticker[]> {
+async function getTickers(): Promise<Ticker[]> {
   const data = await get<{ symbol: string; openPrice: string; lastPrice: string; quoteVolume: string }[]>(
     "/ticker/24hr?type=MINI",
   );
@@ -128,6 +118,28 @@ export async function getMarkets(): Promise<Market[]> {
     const ticker = bySymbol.get(pair.symbol);
     return ticker ? [{ ...pair, ...ticker }] : [];
   });
+}
+
+/** 24h stats for one pair, e.g. "BTCUSDT" */
+export async function getCoinStats(symbol: string): Promise<CoinStats> {
+  const t = await get<{
+    lastPrice: string;
+    priceChangePercent: string;
+    highPrice: string;
+    lowPrice: string;
+    volume: string;
+    quoteVolume: string;
+    count: number;
+  }>(`/ticker/24hr?symbol=${symbol}`);
+  return {
+    lastPrice: Number(t.lastPrice),
+    priceChangePercent: Number(t.priceChangePercent),
+    highPrice: Number(t.highPrice),
+    lowPrice: Number(t.lowPrice),
+    volume: Number(t.volume),
+    quoteVolume: Number(t.quoteVolume),
+    trades: t.count,
+  };
 }
 
 /** Latest price per coin */

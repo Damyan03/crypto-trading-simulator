@@ -1,4 +1,5 @@
-import { QUOTE } from "~/data/api";
+import Stat from "~/components/Stat";
+import { QUOTE } from "~/data/binance-api";
 import { profitLoss, totalValue, type Prices, type Profile } from "~/domain/profile";
 import { changeColor, formatPercent, formatSignedUsdt, formatUsdt } from "~/utils/format";
 
@@ -14,7 +15,7 @@ export default function PortfolioSummary({ profile, prices }: Props) {
   const pnl = total === null ? null : profitLoss(total);
 
   return (
-    <dl className="grid h-full grid-cols-2 content-center gap-6 bg-surface p-6 text-foreground md:grid-cols-4">
+    <dl className="grid h-full grid-cols-2 content-center gap-6 bg-surface p-6 text-xl text-foreground md:grid-cols-4">
       <Stat label="Total value" value={total === null ? "…" : `${formatUsdt(total)} ${QUOTE}`} />
       <Stat label="Cash" value={`${formatUsdt(profile.balance)} ${QUOTE}`} />
       <Stat label="Holdings" value={total === null ? "…" : `${formatUsdt(total - profile.balance)} ${QUOTE}`} />
@@ -24,15 +25,5 @@ export default function PortfolioSummary({ profile, prices }: Props) {
         className={changeColor(pnl?.amount ?? 0)}
       />
     </dl>
-  );
-}
-
-/** One label with its value */
-function Stat({ label, value, className = "" }: { label: string; value: string; className?: string }) {
-  return (
-    <div>
-      <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className={`text-xl font-semibold tabular-nums ${className}`}>{value}</dd>
-    </div>
   );
 }

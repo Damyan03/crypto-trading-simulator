@@ -3,7 +3,7 @@ import ErrorMessage from "~/components/ErrorMessage";
 import HoldingsList from "~/components/HoldingsList";
 import PortfolioSummary from "~/components/PortfolioSummary";
 import SearchBox from "~/components/SearchBox";
-import { getPrices, getTradingPairs, type Pair } from "~/data/api";
+import { getPrices, getTradingPairs, type Pair } from "~/data/binance-api";
 import type { Prices } from "~/domain/profile";
 import { useProfile } from "~/state/store";
 
