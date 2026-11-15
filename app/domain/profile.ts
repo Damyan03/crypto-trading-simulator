@@ -26,6 +26,8 @@ export interface Trade {
   quantity: number;
   /** USDT per coin */
   price: number;
+  /** Trading fee in USDT */
+  fee: number;
 }
 
 export interface Profile {

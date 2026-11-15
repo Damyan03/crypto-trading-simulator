@@ -4,7 +4,7 @@ import { createDemoProfile, createProfile, type Profile, type Trade } from "~/do
 
 // Bump the version when the Profile shape changes; old saves are then ignored
 const STORAGE_KEY = "profile";
-const STORAGE_VERSION = 2;
+const STORAGE_VERSION = 3;
 
 /** What useProfile() returns */
 interface ProfileState {
@@ -23,7 +23,8 @@ const isTrade = (t: Trade) =>
   (t?.side === "BUY" || t?.side === "SELL") &&
   typeof t?.coin === "string" &&
   Number.isFinite(t?.quantity) &&
-  Number.isFinite(t?.price);
+  Number.isFinite(t?.price) &&
+  Number.isFinite(t?.fee);
 
 /** Null if the data isn't a valid profile */
 export function parseProfile(raw: unknown): Profile | null {

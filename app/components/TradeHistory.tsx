@@ -39,6 +39,7 @@ export default function TradeHistory({ trades, pairs, query }: Props) {
           <th className={th}>Price</th>
           <th className={th}>Quantity</th>
           <th className={th}>Total ({QUOTE})</th>
+          <th className={th}>Fee ({QUOTE})</th>
         </tr>
       </thead>
       <tbody>
@@ -58,6 +59,7 @@ export default function TradeHistory({ trades, pairs, query }: Props) {
               <td className={td}>{formatPrice(t.price, pair?.priceDecimals)}</td>
               <td className={td}>{formatQuantity(t.quantity, pair?.quantityDecimals)}</td>
               <td className={td}>{formatUsdt(t.quantity * t.price)}</td>
+              <td className={`${td} text-muted-foreground`}>{formatUsdt(t.fee)}</td>
             </tr>
           );
         })}

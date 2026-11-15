@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { QUOTE, type Pair } from "~/data/binance-api";
 import type { Side } from "~/domain/profile";
-import { applyTrade, quantityFor, validateTrade } from "~/domain/trade-logic";
+import { applyTrade, quantityFor, tradeFee, validateTrade } from "~/domain/trade-logic";
 import { useProfile } from "~/state/store";
 import { formatPrice, formatQuantity, formatUsdt } from "~/utils/format";
 
@@ -39,12 +39,14 @@ export default function TradeForm({ pair, price }: Props) {
 
     setProfile(applyTrade(profile, request));
     setMessage({
-      text: `${side === "BUY" ? "Bought" : "Sold"} ${formatQuantity(quantity, quantityDecimals)} ${coin} at ${formatPrice(price, priceDecimals)} ${QUOTE}.`,
+      text: `${side === "BUY" ? "Bought" : "Sold"} ${formatQuantity(quantity, quantityDecimals)} ${coin} at ${formatPrice(price, priceDecimals)} ${QUOTE}, fee ${formatUsdt(tradeFee(quantity, price))} ${QUOTE}.`,
       ok: true,
     });
   };
 
   const owned = profile.holdings[coin]?.quantity ?? 0;
+  // estimate rows show "—" until the amount is valid
+  const estimate = quantity === null || price === undefined || tooManyDecimals ? null : { quantity, price };
   const row = "flex justify-between gap-2";
 
   return (
@@ -80,10 +82,14 @@ export default function TradeForm({ pair, price }: Props) {
         <div className={row}>
           <dt className="text-muted-foreground">Estimate</dt>
           <dd>
-            {quantity === null || price === undefined || tooManyDecimals
-              ? "—"
-              : `${formatQuantity(quantity, quantityDecimals)} ${coin} ≈ ${formatUsdt(quantity * price)} ${QUOTE}`}
+            {estimate
+              ? `${formatQuantity(estimate.quantity, quantityDecimals)} ${coin} ≈ ${formatUsdt(estimate.quantity * estimate.price)} ${QUOTE}`
+              : "—"}
           </dd>
+        </div>
+        <div className={row}>
+          <dt className="text-muted-foreground">Fee</dt>
+          <dd>{estimate ? `${formatUsdt(tradeFee(estimate.quantity, estimate.price))} ${QUOTE}` : "—"}</dd>
         </div>
         <div className={row}>
           <dt className="text-muted-foreground">Available</dt>
