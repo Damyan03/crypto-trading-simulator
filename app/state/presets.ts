@@ -7,21 +7,18 @@ const STORAGE_VERSION = 1;
 
 /** Editable shortcut values saved under `key`; edited values that fail `isValid` keep their old value */
 function useSavedPresets(key: string, defaults: string[], isValid: (value: string) => boolean) {
-  const [presets, setPresets] = useState(() => {
-    const saved = load<unknown>(key, STORAGE_VERSION);
-    const valid =
-      Array.isArray(saved) &&
-      saved.length === defaults.length &&
-      saved.every((v) => typeof v === "string" && isValid(v));
-    return valid ? (saved as string[]) : defaults;
-  });
+	const [presets, setPresets] = useState(() => {
+		const saved = load<unknown>(key, STORAGE_VERSION);
+		const valid =
+			Array.isArray(saved) && saved.length === defaults.length && saved.every((v) => typeof v === "string" && isValid(v));
+		return valid ? (saved as string[]) : defaults;
+	});
 
-  useEffect(() => save(key, STORAGE_VERSION, presets), [key, presets]);
+	useEffect(() => save(key, STORAGE_VERSION, presets), [key, presets]);
 
-  const update = (edited: string[]) =>
-    setPresets(edited.map((v, i) => (isValid(v.trim()) ? v.trim() : presets[i])));
+	const update = (edited: string[]) => setPresets(edited.map((v, i) => (isValid(v.trim()) ? v.trim() : presets[i])));
 
-  return [presets, update] as const;
+	return [presets, update] as const;
 }
 
 const isAmount = (v: string) => (parseAmount(v) ?? 0) > 0;

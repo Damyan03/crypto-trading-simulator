@@ -4,8 +4,8 @@ import devtoolsJson from "vite-plugin-devtools-json";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [tailwindcss(), reactRouter(), devtoolsJson()],
-  resolve: {
-    tsconfigPaths: true,
-  },
+	plugins: [tailwindcss(), reactRouter(), devtoolsJson()],
+	resolve: {
+		tsconfigPaths: true,
+	},
 });

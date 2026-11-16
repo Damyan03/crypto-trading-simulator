@@ -7,14 +7,14 @@ const MAX_POINTS = 10_000;
 
 /** Whether a new equity point is due: a minute since the last one, or a trade after it */
 export function equityDue(profile: Profile, now: number) {
-  const last = profile.equity.at(-1);
-  const lastTrade = profile.trades.at(-1);
-  if (!last) return true;
-  return now - last.time >= INTERVAL || (lastTrade !== undefined && lastTrade.time > last.time);
+	const last = profile.equity.at(-1);
+	const lastTrade = profile.trades.at(-1);
+	if (!last) return true;
+	return now - last.time >= INTERVAL || (lastTrade !== undefined && lastTrade.time > last.time);
 }
 
 /** The profile with `value` added to its equity curve */
 export const addEquityPoint = (profile: Profile, value: number, time: number): Profile => ({
-  ...profile,
-  equity: [...profile.equity, { time, value }].slice(-MAX_POINTS),
+	...profile,
+	equity: [...profile.equity, { time, value }].slice(-MAX_POINTS),
 });

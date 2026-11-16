@@ -1,49 +1,49 @@
 @theme {
-  --color-background: light-dark(#f5f8fc, #0b1220);
-  --color-surface: light-dark(#ffffff, #111a2e); /* cards, panels, header */
-  --color-muted: light-dark(#eaf0f8, #18233b); /* inputs, table headers, row hover */
-  --color-border: light-dark(#d6e0ee, #24324d);
+	--color-background: light-dark(#f5f8fc, #0b1220);
+	--color-surface: light-dark(#ffffff, #111a2e); /* cards, panels, header */
+	--color-muted: light-dark(#eaf0f8, #18233b); /* inputs, table headers, row hover */
+	--color-border: light-dark(#d6e0ee, #24324d);
 
-  --color-foreground: light-dark(#0f1b2d, #e6edf7);
-  --color-muted-foreground: light-dark(#5b6b82, #93a3bd);
+	--color-foreground: light-dark(#0f1b2d, #e6edf7);
+	--color-muted-foreground: light-dark(#5b6b82, #93a3bd);
 
-  --color-primary: light-dark(#2563eb, #3b82f6); /* use text-white on fills */
-  --color-primary-subtle: light-dark(#dbeafe, #172a4f);
-  --color-ring: light-dark(#3b82f6, #60a5fa);
+	--color-primary: light-dark(#2563eb, #3b82f6); /* use text-white on fills */
+	--color-primary-subtle: light-dark(#dbeafe, #172a4f);
+	--color-ring: light-dark(#3b82f6, #60a5fa);
 
-  --color-success: light-dark(#15803d, #16a34a); /* buy, profit */
-  --color-success-subtle: light-dark(#dcfce7, #0f2e1f);
-  --color-danger: light-dark(#dc2626, #ef4444); /* sell, loss, errors */
-  --color-danger-subtle: light-dark(#fee2e2, #3a1418);
-  --color-warning: light-dark(#b45309, #f59e0b);
-  --color-warning-subtle: light-dark(#fef3c7, #3a2a0a);
+	--color-success: light-dark(#15803d, #16a34a); /* buy, profit */
+	--color-success-subtle: light-dark(#dcfce7, #0f2e1f);
+	--color-danger: light-dark(#dc2626, #ef4444); /* sell, loss, errors */
+	--color-danger-subtle: light-dark(#fee2e2, #3a1418);
+	--color-warning: light-dark(#b45309, #f59e0b);
+	--color-warning-subtle: light-dark(#fef3c7, #3a2a0a);
 
-  --color-chart-1: light-dark(#2563eb, #60a5fa); /* price */
-  --color-chart-2: light-dark(#0891b2, #22d3ee); /* equity curve */
-  --color-chart-grid: light-dark(#e3e9f2, #1d2942);
+	--color-chart-1: light-dark(#2563eb, #60a5fa); /* price */
+	--color-chart-2: light-dark(#0891b2, #22d3ee); /* equity curve */
+	--color-chart-grid: light-dark(#e3e9f2, #1d2942);
 }
 
 @layer base {
-  /* required for light-dark() */
-  :root {
-    color-scheme: light dark;
-  }
-  :root[data-theme="light"] {
-    color-scheme: light;
-  }
-  :root[data-theme="dark"] {
-    color-scheme: dark;
-  }
+	/* required for light-dark() */
+	:root {
+		color-scheme: light dark;
+	}
+	:root[data-theme="light"] {
+		color-scheme: light;
+	}
+	:root[data-theme="dark"] {
+		color-scheme: dark;
+	}
 
-  *,
-  ::before,
-  ::after,
-  ::backdrop {
-    border-color: var(--color-border);
-  }
+	*,
+	::before,
+	::after,
+	::backdrop {
+		border-color: var(--color-border);
+	}
 
-  body {
-    background-color: var(--color-background);
-    color: var(--color-foreground);
-  }
+	body {
+		background-color: var(--color-background);
+		color: var(--color-foreground);
+	}
 }
