@@ -145,7 +145,7 @@ export default function TradeForm({ pair, price }: Props) {
 					disabled={price === undefined}
 					className="rounded bg-success py-2 font-semibold text-white hover:bg-success/90 disabled:opacity-50"
 				>
-					{common.side.BUY}
+					{trade.action.BUY}
 				</button>
 				<button
 					type="button"
@@ -153,7 +153,7 @@ export default function TradeForm({ pair, price }: Props) {
 					disabled={price === undefined}
 					className="rounded bg-danger py-2 font-semibold text-white hover:bg-danger/90 disabled:opacity-50"
 				>
-					{common.side.SELL}
+					{trade.action.SELL}
 				</button>
 			</div>
 

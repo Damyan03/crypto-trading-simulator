@@ -1,18 +1,21 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { RequestError } from "~/data/http";
 import { load, save } from "~/data/storage";
+import { bg } from "./bg";
 import { en, type Dictionary } from "./en";
 
 /** Every supported language; to add one, copy en.ts and list it here */
-export const DICTIONARIES = { en } satisfies Record<string, Dictionary>;
+export const DICTIONARIES = { en, bg } satisfies Record<string, Dictionary>;
 
 export type Language = keyof typeof DICTIONARIES;
+
+/** In picker order */
+export const LANGUAGES = Object.keys(DICTIONARIES) as Language[];
 
 const STORAGE_KEY = "language";
 const STORAGE_VERSION = 1;
 
-const isLanguage = (value: unknown): value is Language =>
-	typeof value === "string" && Object.keys(DICTIONARIES).includes(value);
+const isLanguage = (value: unknown): value is Language => LANGUAGES.includes(value as Language);
 
 /** The saved choice, else the browser's language if supported, else English */
 export function startLanguage(): Language {

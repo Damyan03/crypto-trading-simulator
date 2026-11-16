@@ -3,6 +3,8 @@
  * Values passed to the functions are already formatted, e.g. "1,234.50 USDT".
  */
 export const en = {
+	/** The language's own name, shown in the language picker */
+	languageName: "English",
 	common: {
 		coin: "Coin",
 		price: "Price",
@@ -38,6 +40,7 @@ export const en = {
 		confirmReset: (balance: string) => `Reset to ${balance}? All holdings and trades will be deleted.`,
 		confirmDemo: "Switch to the demo account? All holdings and trades will be replaced.",
 		demoFailed: (error: string) => `Couldn't load the demo. ${error}`,
+		language: "Language",
 	},
 	search: {
 		label: "Search coins",
@@ -78,6 +81,8 @@ export const en = {
 		notTraded: (coin: string) => `${coin} isn't traded on this platform.`,
 		amountIn: (unit: string) => `Amount in ${unit}`,
 		owned: "Owned",
+		// button text; common.side is the trade's side in the history
+		action: { BUY: "Buy", SELL: "Sell" },
 		estimate: "Estimate",
 		fee: "Fee",
 		available: "Available",
