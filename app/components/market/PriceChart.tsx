@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { CandlestickSeries, createChart, type IChartApi, type ISeriesApi, type UTCTimestamp } from "lightweight-charts";
 import ErrorMessage from "~/components/ui/ErrorMessage";
 import ReconnectingNote from "~/components/ui/ReconnectingNote";
+import SegmentedControl from "~/components/ui/SegmentedControl";
 import { getCandles, subscribeCandles, type Candle, type CandleInterval, type Pair } from "~/data/binance-api";
 import { useText } from "~/i18n/language";
 import { useTheme } from "~/state/theme";
@@ -95,7 +96,6 @@ export default function PriceChart({ pair }: Props) {
 	};
 
 	const pickTimeframe = (next: Timeframe) => {
-		if (next === timeframe) return;
 		setError(null);
 		setLoading(true);
 		setTimeframe(next);
@@ -103,19 +103,13 @@ export default function PriceChart({ pair }: Props) {
 
 	return (
 		<div className="flex h-full w-full flex-col">
-			<div className="flex gap-1 border-b px-3 py-1 text-xs">
-				{TIMEFRAMES.map((t) => (
-					<button
-						key={t}
-						type="button"
-						onClick={() => pickTimeframe(t)}
-						aria-pressed={t === timeframe}
-						className={`rounded px-1.5 py-0.5 ${t === timeframe ? "bg-muted font-semibold text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-					>
-						{text.timeframes[t]}
-					</button>
-				))}
-			</div>
+			<SegmentedControl
+				options={TIMEFRAMES}
+				value={timeframe}
+				onChange={pickTimeframe}
+				label={(t) => text.timeframes[t]}
+				className="border-b px-3 py-1 text-xs"
+			/>
 			<div className="relative min-h-0 flex-1">
 				<div ref={containerRef} className="h-full w-full" />
 				{loading && !error && (

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import QuickAmounts from "~/components/trade/QuickAmounts";
+import SegmentedControl from "~/components/ui/SegmentedControl";
 import { QUOTE, type Pair } from "~/data/binance-api";
 import type { Side } from "~/domain/profile";
 import { applyTrade, quantityFor, roundDown, tradeFee, validateTrade } from "~/domain/trade-logic";
@@ -9,7 +10,9 @@ import { useProfile } from "~/state/store";
 import { decimalsIn, parseAmount } from "~/utils/amount";
 import { formatPrice, formatQuantity, formatUsdt } from "~/utils/format";
 
-type Unit = "coin" | "quote";
+// currencies the amount can be typed in: the coin or USDT
+const UNITS = ["coin", "quote"] as const;
+type Unit = (typeof UNITS)[number];
 
 interface Props {
 	pair: Pair;
@@ -41,11 +44,6 @@ export default function TradeForm({ pair, price }: Props) {
 		setAmount(text);
 		setUnit(newUnit);
 		setMessage(null);
-	};
-
-	// clears the amount, so it's never read in the other currency
-	const switchUnit = (u: Unit) => {
-		if (u !== unit) changeAmount("", u);
 	};
 
 	// fills in a coin amount
@@ -91,16 +89,14 @@ export default function TradeForm({ pair, price }: Props) {
 					aria-label={trade.amountIn(unit === "coin" ? coin : QUOTE)}
 					className="min-w-0 flex-1 bg-transparent px-3 py-2 tabular-nums placeholder:text-muted-foreground focus:outline-none"
 				/>
-				{(["coin", "quote"] as const).map((u) => (
-					<button
-						key={u}
-						type="button"
-						onClick={() => switchUnit(u)}
-						className={`px-2 text-sm ${u === unit ? "font-semibold text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-					>
-						{u === "coin" ? coin : QUOTE}
-					</button>
-				))}
+				{/* clears the amount, so it's never read in the other currency */}
+				<SegmentedControl
+					options={UNITS}
+					value={unit}
+					onChange={(u) => changeAmount("", u)}
+					label={(u) => (u === "coin" ? coin : QUOTE)}
+					className="items-center px-1 text-sm"
+				/>
 			</div>
 
 			{owned > 0 && (

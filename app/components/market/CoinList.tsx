@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router";
 import ErrorMessage from "~/components/ui/ErrorMessage";
+import Notice from "~/components/ui/Notice";
 import Pagination from "~/components/ui/Pagination";
 import ReconnectingNote from "~/components/ui/ReconnectingNote";
+import { LinkRow, Table, Td, Th } from "~/components/ui/Table";
 import { getMarkets, QUOTE, subscribeTickers, type Market, type Ticker } from "~/data/binance-api";
 import { useText } from "~/i18n/language";
 import { changeColor, formatPercent, formatPrice, formatVolume } from "~/utils/format";
+import { usePage } from "~/utils/pagination";
 import { tradePath } from "~/utils/paths";
 import { matchesSearch } from "~/utils/search";
 
@@ -25,14 +27,11 @@ interface Props {
 
 /** All USDT pairs with price, 24h change and volume; the coins on screen update live */
 export default function CoinList({ query }: Props) {
-	const navigate = useNavigate();
 	const { common, coinList } = useText();
 	const [markets, setMarkets] = useState<Market[] | null>(null);
 	const [error, setError] = useState<Error | null>(null);
 	// changing this reruns the effect, i.e. loads again
 	const [attempt, setAttempt] = useState(0);
-	// kept with the search it belongs to, so a new search starts on the first page
-	const [paging, setPaging] = useState({ query, page: 0 });
 	// newest stats from the stream, by symbol; drawn over the loaded list, whose order stays put
 	const [tickers, setTickers] = useState<Record<string, Ticker>>({});
 	// false while the live connection is down and reconnecting
@@ -46,14 +45,8 @@ export default function CoinList({ query }: Props) {
 	const sorted = useMemo(() => markets && [...markets].sort(byVolume), [markets]);
 	// only the coins matching the search
 	const visible = sorted ? sorted.filter((m) => matchesSearch(m.coin, query)) : null;
-
-	const pageCount = Math.max(1, Math.ceil((visible?.length ?? 0) / PAGE_SIZE));
-	// stays in range if the list got shorter, e.g. after reloading it
-	const page = Math.min(paging.query === query ? paging.page : 0, pageCount - 1);
-	const shown = (visible?.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE) ?? []).map((m) => ({
-		...m,
-		...tickers[m.symbol],
-	}));
+	const { shown: pageMarkets, pagination } = usePage(visible ?? [], PAGE_SIZE, query);
+	const shown = pageMarkets.map((m) => ({ ...m, ...tickers[m.symbol] }));
 
 	// e.g. "BTC,ETH"; a string so the stream only changes when the coins on screen do
 	const shownCoins = shown.map((m) => m.coin).join(",");
@@ -80,55 +73,41 @@ export default function CoinList({ query }: Props) {
 		setAttempt((a) => a + 1);
 	};
 
-	// shared cell styles
-	const th = "px-4 py-2 text-right font-normal whitespace-nowrap";
-	const td = "px-4 py-2 text-right whitespace-nowrap";
-
 	return (
 		<div className="h-full overflow-y-auto bg-surface text-foreground">
-			{!sorted && !error && <p className="p-4 text-muted-foreground">{coinList.loading}</p>}
-			{sorted?.length === 0 && <p className="p-4 text-muted-foreground">{coinList.empty}</p>}
-			{sorted && sorted.length > 0 && visible?.length === 0 && (
-				<p className="p-4 text-muted-foreground">{coinList.noMatch(query)}</p>
-			)}
+			{!sorted && !error && <Notice>{coinList.loading}</Notice>}
+			{sorted?.length === 0 && <Notice>{coinList.empty}</Notice>}
+			{sorted && sorted.length > 0 && visible?.length === 0 && <Notice>{coinList.noMatch(query)}</Notice>}
 			{error && <ErrorMessage error={error} onRetry={retry} />}
 			{!live && <ReconnectingNote className="px-4 py-2" />}
 
-			{visible && visible.length > 0 && (
+			{shown.length > 0 && (
 				<>
-					<table className="w-full">
-						<thead className="sticky top-0 bg-muted text-xs text-muted-foreground">
-							<tr>
-								<th className="w-full px-4 py-2 text-left font-normal">{common.coin}</th>
-								<th className={th}>{common.price}</th>
-								<th className={th}>{coinList.change}</th>
-								<th className={th}>{coinList.volume}</th>
-							</tr>
-						</thead>
-						<tbody>
-							{shown.map((m) => (
-								<tr
-									key={m.symbol}
-									onClick={() => navigate(tradePath(m.coin))}
-									className="cursor-pointer border-b tabular-nums hover:bg-muted"
-								>
-									<td className="px-4 py-2 text-left">
-										<span className="font-semibold">{m.coin}</span>
-										<span className="ml-2 text-sm text-muted-foreground">/{QUOTE}</span>
-									</td>
-									<td className={td}>{formatPrice(m.lastPrice, m.priceDecimals)}</td>
-									<td className={`${td} ${changeColor(m.priceChangePercent)}`}>{formatPercent(m.priceChangePercent)}</td>
-									<td className={`${td} text-muted-foreground`}>{formatVolume(m.quoteVolume)}</td>
-								</tr>
-							))}
-						</tbody>
-					</table>
-					<Pagination
-						page={page}
-						pageSize={PAGE_SIZE}
-						total={visible.length}
-						onChange={(next) => setPaging({ query, page: next })}
-					/>
+					<Table
+						head={
+							<>
+								<Th align="left" className="w-full">
+									{common.coin}
+								</Th>
+								<Th>{common.price}</Th>
+								<Th>{coinList.change}</Th>
+								<Th>{coinList.volume}</Th>
+							</>
+						}
+					>
+						{shown.map((m) => (
+							<LinkRow key={m.symbol} to={tradePath(m.coin)}>
+								<Td align="left">
+									<span className="font-semibold">{m.coin}</span>
+									<span className="ml-2 text-sm text-muted-foreground">/{QUOTE}</span>
+								</Td>
+								<Td>{formatPrice(m.lastPrice, m.priceDecimals)}</Td>
+								<Td className={changeColor(m.priceChangePercent)}>{formatPercent(m.priceChangePercent)}</Td>
+								<Td className="text-muted-foreground">{formatVolume(m.quoteVolume)}</Td>
+							</LinkRow>
+						))}
+					</Table>
+					<Pagination {...pagination} />
 				</>
 			)}
 		</div>

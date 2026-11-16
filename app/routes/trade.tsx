@@ -1,13 +1,10 @@
-import { useState } from "react";
 import CoinDetails from "~/components/market/CoinDetails";
 import ErrorMessage from "~/components/ui/ErrorMessage";
-import HoldingsList from "~/components/portfolio/HoldingsList";
+import Notice from "~/components/ui/Notice";
 import OrderBook from "~/components/market/OrderBook";
-import PortfolioTabs, { type PortfolioTab } from "~/components/portfolio/PortfolioTabs";
+import PortfolioPanel from "~/components/portfolio/PortfolioPanel";
 import PriceChart from "~/components/market/PriceChart";
-import ReconnectingNote from "~/components/ui/ReconnectingNote";
 import TradeForm from "~/components/trade/TradeForm";
-import TradeHistory from "~/components/portfolio/TradeHistory";
 import { useText } from "~/i18n/language";
 import { useEquityRecorder } from "~/state/equity";
 import { useLivePrices } from "~/state/live-prices";
@@ -27,9 +24,9 @@ export default function Trade({ params }: Route.ComponentProps) {
 	// held coins plus this one (once it's known to be traded), on one live connection
 	const held = Object.keys(profile.holdings);
 	const coins = pair && !held.includes(coin) ? [...held, coin] : held;
-	const { prices, error: pricesError, live, retry: retryPrices } = useLivePrices(coins);
+	const livePrices = useLivePrices(coins);
+	const { prices } = livePrices;
 	useEquityRecorder(prices);
-	const [tab, setTab] = useState<PortfolioTab>("holdings");
 
 	// only the error or status until the coin is known to be traded
 	if (!pair) {
@@ -38,9 +35,7 @@ export default function Trade({ params }: Route.ComponentProps) {
 				{error ? (
 					<ErrorMessage error={error} onRetry={retry} />
 				) : (
-					<p className="p-4 text-muted-foreground">
-						{pair === null ? text.trade.notTraded(coin) : text.common.loadingCoin(coin)}
-					</p>
+					<Notice>{pair === null ? text.trade.notTraded(coin) : text.common.loadingCoin(coin)}</Notice>
 				)}
 			</div>
 		);
@@ -59,19 +54,12 @@ export default function Trade({ params }: Route.ComponentProps) {
 					</div>
 				</section>
 				<section className="flex flex-col lg:min-h-48 lg:flex-1">
-					<PortfolioTabs active={tab} onChange={setTab} />
 					{/* stacked: at most the table header + 3 rows (2rem + 3 × 2.5625rem), the rest scrolls */}
-					<div className="max-h-38.75 overflow-y-auto lg:max-h-none lg:min-h-0 lg:flex-1">
-						{tab === "holdings" ? (
-							<>
-								{pricesError && <ErrorMessage error={pricesError} onRetry={retryPrices} />}
-								{!live && <ReconnectingNote className="p-4" />}
-								<HoldingsList holdings={profile.holdings} prices={prices} pairs={pairs ?? {}} query="" />
-							</>
-						) : (
-							<TradeHistory trades={profile.trades} pairs={pairs ?? {}} query="" />
-						)}
-					</div>
+					<PortfolioPanel
+						livePrices={livePrices}
+						pairs={pairs ?? {}}
+						listClassName="max-h-38.75 lg:max-h-none lg:min-h-0 lg:flex-1"
+					/>
 				</section>
 			</div>
 			<aside className="flex flex-col border-t lg:w-80 lg:shrink-0 lg:border-l lg:border-t-0">

@@ -31,3 +31,5 @@ export function useLivePrices(coinList: string[]) {
 
 	return { prices, error, live, retry };
 }
+
+export type LivePrices = ReturnType<typeof useLivePrices>;

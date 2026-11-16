@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import ErrorMessage from "~/components/ui/ErrorMessage";
+import Notice from "~/components/ui/Notice";
 import ReconnectingNote from "~/components/ui/ReconnectingNote";
+import SegmentedControl from "~/components/ui/SegmentedControl";
 import { QUOTE, subscribeOrderBook, type Pair } from "~/data/binance-api";
 import { groupDepth, type Depth, type DepthLevel } from "~/domain/order-book";
 import { useText } from "~/i18n/language";
@@ -36,7 +38,7 @@ export default function OrderBook({ pair, price }: Props) {
 	const retry = () => setAttempt((a) => a + 1);
 
 	if (error) return <ErrorMessage error={error} onRetry={retry} />;
-	if (!depth) return <p className="bg-surface p-4 text-sm text-muted-foreground">{text.loading}</p>;
+	if (!depth) return <Notice>{text.loading}</Notice>;
 
 	const tick = 10 ** -pair.priceDecimals;
 	// a group of 10 ticks needs one decimal less, and so on
@@ -61,18 +63,13 @@ export default function OrderBook({ pair, price }: Props) {
 
 	return (
 		<div className="h-full overflow-hidden bg-surface text-xs tabular-nums text-foreground">
-			<div className="flex flex-wrap gap-1 px-3 pt-2">
-				{STEPS.map((s) => (
-					<button
-						key={s}
-						type="button"
-						onClick={() => setStep(s)}
-						className={`rounded px-1.5 py-0.5 ${s === step ? "bg-muted font-semibold text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-					>
-						{formatPrice(tick * 10 ** s, decimalsFor(s))}
-					</button>
-				))}
-			</div>
+			<SegmentedControl
+				options={STEPS}
+				value={step}
+				onChange={setStep}
+				label={(s) => formatPrice(tick * 10 ** s, decimalsFor(s))}
+				className="flex-wrap px-3 pt-2"
+			/>
 			<div className="flex justify-between px-3 py-2 text-muted-foreground">
 				<span>{text.price(QUOTE)}</span>
 				<span>{text.amount(pair.coin)}</span>

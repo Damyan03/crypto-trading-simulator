@@ -1,4 +1,6 @@
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
+import Notice from "~/components/ui/Notice";
+import { LinkRow, Table, Td, Th } from "~/components/ui/Table";
 import { QUOTE, type Pair } from "~/data/binance-api";
 import type { Holdings, Prices } from "~/domain/profile";
 import { useText } from "~/i18n/language";
@@ -17,17 +19,16 @@ interface Props {
 
 /** Table of owned coins with their value and profit/loss */
 export default function HoldingsList({ holdings, prices, pairs, query }: Props) {
-	const navigate = useNavigate();
 	const { common, holdings: holdingsText } = useText();
 
 	if (Object.keys(holdings).length === 0) {
 		return (
-			<p className="p-4 text-muted-foreground">
+			<Notice>
 				{holdingsText.empty}{" "}
 				<Link to="/" className="text-primary hover:underline">
 					{holdingsText.discoverLink}
 				</Link>
-			</p>
+			</Notice>
 		);
 	}
 
@@ -44,42 +45,35 @@ export default function HoldingsList({ holdings, prices, pairs, query }: Props) 
 		// biggest position first
 		.sort((a, b) => (b.value ?? 0) - (a.value ?? 0));
 
-	if (rows.length === 0) return <p className="p-4 text-muted-foreground">{holdingsText.noMatch(query)}</p>;
-
-	// shared cell styles
-	const th = "px-4 py-2 text-right font-normal whitespace-nowrap";
-	const td = "px-4 py-2 text-right whitespace-nowrap";
+	if (rows.length === 0) return <Notice>{holdingsText.noMatch(query)}</Notice>;
 
 	return (
-		<table className="w-full">
-			<thead className="sticky top-0 bg-muted text-xs text-muted-foreground">
-				<tr>
-					<th className="px-4 py-2 text-left font-normal">{common.coin}</th>
-					<th className={th}>{common.quantity}</th>
-					<th className={th}>{holdingsText.avgPrice}</th>
-					<th className={th}>{common.price}</th>
-					<th className={th}>{holdingsText.value(QUOTE)}</th>
-					<th className={th}>{common.profitLoss}</th>
-				</tr>
-			</thead>
-			<tbody>
-				{rows.map((r) => (
-					<tr
-						key={r.coin}
-						onClick={() => navigate(tradePath(r.coin))}
-						className="cursor-pointer border-b tabular-nums hover:bg-muted"
-					>
-						<td className="px-4 py-2 text-left font-semibold">{r.coin}</td>
-						<td className={td}>{formatQuantity(r.quantity, r.pair?.quantityDecimals)}</td>
-						<td className={td}>{formatPrice(r.avgPrice, r.pair?.priceDecimals)}</td>
-						<td className={td}>{r.price === undefined ? "…" : formatPrice(r.price, r.pair?.priceDecimals)}</td>
-						<td className={td}>{r.value === null ? "…" : formatUsdt(r.value)}</td>
-						<td className={`${td} ${changeColor(r.pnl ?? 0)}`}>
-							{r.pnl === null || r.pnlPercent === null ? "…" : `${formatSignedUsdt(r.pnl)} (${formatPercent(r.pnlPercent)})`}
-						</td>
-					</tr>
-				))}
-			</tbody>
-		</table>
+		<Table
+			head={
+				<>
+					<Th align="left">{common.coin}</Th>
+					<Th>{common.quantity}</Th>
+					<Th>{holdingsText.avgPrice}</Th>
+					<Th>{common.price}</Th>
+					<Th>{holdingsText.value(QUOTE)}</Th>
+					<Th>{common.profitLoss}</Th>
+				</>
+			}
+		>
+			{rows.map((r) => (
+				<LinkRow key={r.coin} to={tradePath(r.coin)}>
+					<Td align="left" className="font-semibold">
+						{r.coin}
+					</Td>
+					<Td>{formatQuantity(r.quantity, r.pair?.quantityDecimals)}</Td>
+					<Td>{formatPrice(r.avgPrice, r.pair?.priceDecimals)}</Td>
+					<Td>{r.price === undefined ? "…" : formatPrice(r.price, r.pair?.priceDecimals)}</Td>
+					<Td>{r.value === null ? "…" : formatUsdt(r.value)}</Td>
+					<Td className={changeColor(r.pnl ?? 0)}>
+						{r.pnl === null || r.pnlPercent === null ? "…" : `${formatSignedUsdt(r.pnl)} (${formatPercent(r.pnlPercent)})`}
+					</Td>
+				</LinkRow>
+			))}
+		</Table>
 	);
 }

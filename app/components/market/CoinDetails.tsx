@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import ErrorMessage from "~/components/ui/ErrorMessage";
+import Notice from "~/components/ui/Notice";
 import ReconnectingNote from "~/components/ui/ReconnectingNote";
 import Stat from "~/components/ui/Stat";
 import { getCoinStats, QUOTE, subscribeCoinStats, type CoinStats, type Pair } from "~/data/binance-api";
@@ -46,7 +47,7 @@ export default function CoinDetails({ pair }: Props) {
 
 	// the stream may still deliver stats even if the first request failed
 	if (error && !stats) return <ErrorMessage error={error} onRetry={retry} />;
-	if (!stats) return <p className="bg-surface p-4 text-muted-foreground">{common.loadingCoin(coin)}</p>;
+	if (!stats) return <Notice>{common.loadingCoin(coin)}</Notice>;
 
 	// "—" for values CoinGecko doesn't have
 	const price = (value: number | null) => (value === null ? "—" : formatPrice(value, pair.priceDecimals));
