@@ -2,7 +2,7 @@ import Notice from "~/components/ui/Notice";
 import Pagination from "~/components/ui/Pagination";
 import { LinkRow, Table, Td, Th } from "~/components/ui/Table";
 import type { Pair } from "~/data/binance-rest";
-import { QUOTE, type Trade } from "~/domain/profile";
+import { QUOTE, type Side, type Trade } from "~/domain/profile";
 import { useText } from "~/i18n/language";
 import { formatPrice, formatQuantity, formatTime, formatUsdt } from "~/utils/format";
 import { usePage } from "~/utils/pagination";
@@ -18,17 +18,21 @@ interface Props {
 	pairs: Record<string, Pair>;
 	/** Search box text */
 	query: string;
+	/** Side filter */
+	side: Side | "ALL";
 }
 
 /** Table of past trades, newest first, a page at a time */
-export default function TradeHistory({ trades, pairs, query }: Props) {
+export default function TradeHistory({ trades, pairs, query, side }: Props) {
 	const { common, history } = useText();
 	// trades are stored oldest first
-	const rows = trades.filter((t) => matchesSearch(t.coin, query)).reverse();
-	const { shown, pagination } = usePage(rows, PAGE_SIZE, query);
+	const rows = trades.filter((t) => (side === "ALL" || t.side === side) && matchesSearch(t.coin, query)).reverse();
+	const { shown, pagination } = usePage(rows, PAGE_SIZE, `${side} ${query}`);
 
 	if (trades.length === 0) return <Notice>{history.empty}</Notice>;
-	if (rows.length === 0) return <Notice>{history.noMatch(query)}</Notice>;
+	if (rows.length === 0) {
+		return <Notice>{side === "ALL" || query ? history.noMatch(query) : history.noSide[side]}</Notice>;
+	}
 
 	return (
 		<>

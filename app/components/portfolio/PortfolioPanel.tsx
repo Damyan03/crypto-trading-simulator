@@ -4,10 +4,16 @@ import HoldingsList from "~/components/portfolio/HoldingsList";
 import PortfolioTabs, { type PortfolioTab } from "~/components/portfolio/PortfolioTabs";
 import ReconnectingNote from "~/components/ui/ReconnectingNote";
 import SearchBox from "~/components/ui/SearchBox";
+import SegmentedControl from "~/components/ui/SegmentedControl";
 import TradeHistory from "~/components/portfolio/TradeHistory";
 import type { Pair } from "~/data/binance-rest";
+import type { Side } from "~/domain/profile";
+import { useText } from "~/i18n/language";
 import type { LivePrices } from "~/state/live-prices";
 import { useProfile } from "~/state/store";
+
+// trade history side filter
+const SIDES = ["ALL", "BUY", "SELL"] as const;
 
 interface Props {
 	/** The page's live prices; the panel shares their connection */
@@ -29,16 +35,25 @@ export default function PortfolioPanel({
 }: Props) {
 	const { profile } = useProfile();
 	const { prices, error, live, retry } = livePrices;
+	const filter = useText().history.filter;
 	const [tab, setTab] = useState<PortfolioTab>("holdings");
 	// text in the search box, passed to the list as a filter
 	const [query, setQuery] = useState("");
+	const [side, setSide] = useState<Side | "ALL">("ALL");
 
 	return (
 		<>
 			<PortfolioTabs active={tab} onChange={setTab} />
-			{searchable && (
-				<div className="border-b p-3">
-					<SearchBox value={query} onChange={setQuery} />
+			{(searchable || tab === "history") && (
+				<div className="flex items-center gap-3 border-b p-3">
+					{searchable && (
+						<div className="min-w-0 flex-1">
+							<SearchBox value={query} onChange={setQuery} />
+						</div>
+					)}
+					{tab === "history" && (
+						<SegmentedControl options={SIDES} value={side} onChange={setSide} label={(s) => filter[s]} className="text-sm" />
+					)}
 				</div>
 			)}
 			<div className={`overflow-y-auto ${listClassName}`}>
@@ -49,7 +64,7 @@ export default function PortfolioPanel({
 						<HoldingsList holdings={profile.holdings} prices={prices} pairs={pairs} query={query} />
 					</>
 				) : (
-					<TradeHistory trades={profile.trades} pairs={pairs} query={query} />
+					<TradeHistory trades={profile.trades} pairs={pairs} query={query} side={side} />
 				)}
 			</div>
 		</>

@@ -124,6 +124,8 @@ export const bg: Dictionary = {
 	history: {
 		empty: "Все още нямате сделки.",
 		noMatch: (query: string) => `Няма сделки, съвпадащи с „${query}“.`,
+		noSide: { BUY: "Все още нямате покупки.", SELL: "Все още нямате продажби." },
+		filter: { ALL: "Всички", BUY: "Покупки", SELL: "Продажби" },
 		time: "Време",
 		side: "Посока",
 		total: (quote: string) => `Общо (${quote})`,

@@ -127,6 +127,8 @@ export const en = {
 	history: {
 		empty: "No trades yet.",
 		noMatch: (query: string) => `No trades match "${query}".`,
+		noSide: { BUY: "No buy trades yet.", SELL: "No sell trades yet." },
+		filter: { ALL: "All", BUY: "Buy", SELL: "Sell" },
 		time: "Time",
 		side: "Side",
 		total: (quote: string) => `Total (${quote})`,
