@@ -39,7 +39,7 @@ export default function Portfolio() {
 					<div className="flex-1 min-h-0 overflow-y-auto bg-surface">
 						{tab === "holdings" ? (
 							<>
-								{error && <ErrorMessage message={error} onRetry={retry} />}
+								{error && <ErrorMessage error={error} onRetry={retry} />}
 								{!live && <ReconnectingNote className="p-4" />}
 								<HoldingsList holdings={profile.holdings} prices={prices} pairs={pairs} query={query} />
 							</>

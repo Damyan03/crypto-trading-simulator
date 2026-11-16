@@ -1,6 +1,8 @@
+import { useText } from "~/i18n/language";
+
 export type PortfolioTab = "holdings" | "history";
 
-const LABELS: Record<PortfolioTab, string> = { holdings: "Holdings", history: "Trade history" };
+const TABS: PortfolioTab[] = ["holdings", "history"];
 
 interface Props {
 	active: PortfolioTab;
@@ -9,9 +11,10 @@ interface Props {
 
 /** Switches between current holdings and past trades */
 export default function PortfolioTabs({ active, onChange }: Props) {
+	const labels = useText().portfolio.tabs;
 	return (
 		<div className="flex gap-4 border-b bg-surface px-4">
-			{(Object.keys(LABELS) as PortfolioTab[]).map((tab) => (
+			{TABS.map((tab) => (
 				<button
 					key={tab}
 					type="button"
@@ -22,7 +25,7 @@ export default function PortfolioTabs({ active, onChange }: Props) {
 							: "border-transparent text-muted-foreground hover:text-foreground"
 					}`}
 				>
-					{LABELS[tab]}
+					{labels[tab]}
 				</button>
 			))}
 		</div>

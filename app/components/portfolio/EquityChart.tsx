@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { BaselineSeries, createChart, type IChartApi, type ISeriesApi, type UTCTimestamp } from "lightweight-charts";
 import { STARTING_BALANCE, type EquityPoint } from "~/domain/profile";
+import { useText } from "~/i18n/language";
 import { chartOptions, themeColor } from "~/utils/chart";
 
 interface Props {
@@ -17,6 +18,7 @@ function toChartData(points: EquityPoint[]) {
 /** Account value over time: green above the starting balance, red below (TradingView Lightweight Charts) */
 export default function EquityChart({ points }: Props) {
 	const containerRef = useRef<HTMLDivElement>(null);
+	const text = useText().equityChart;
 	const chartRef = useRef<IChartApi | null>(null);
 	const seriesRef = useRef<ISeriesApi<"Baseline"> | null>(null);
 	// zoom to fit only the first time, so new points don't reset the user's zoom
@@ -63,7 +65,7 @@ export default function EquityChart({ points }: Props) {
 			<div ref={containerRef} className="h-full w-full" />
 			{points.length < 2 && (
 				<p className="absolute inset-0 grid place-items-center bg-surface p-4 text-center text-sm text-muted-foreground">
-					Your account value over time shows here as you trade and while prices are live.
+					{text.empty}
 				</p>
 			)}
 		</div>

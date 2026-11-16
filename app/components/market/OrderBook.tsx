@@ -3,6 +3,7 @@ import ErrorMessage from "~/components/ui/ErrorMessage";
 import ReconnectingNote from "~/components/ui/ReconnectingNote";
 import { QUOTE, subscribeOrderBook, type Pair } from "~/data/binance-api";
 import { groupDepth, type Depth, type DepthLevel } from "~/domain/order-book";
+import { useText } from "~/i18n/language";
 import { formatPrice, formatQuantity } from "~/utils/format";
 
 // price levels shown per side
@@ -18,8 +19,9 @@ interface Props {
 
 /** Live order book: how much of the coin is waiting to be bought or sold at each price */
 export default function OrderBook({ pair, price }: Props) {
+	const text = useText().orderBook;
 	const [depth, setDepth] = useState<Depth | null>(null);
-	const [error, setError] = useState<string | null>(null);
+	const [error, setError] = useState<Error | null>(null);
 	const [attempt, setAttempt] = useState(0);
 	// false while the live connection is down and reconnecting
 	const [live, setLive] = useState(true);
@@ -33,8 +35,8 @@ export default function OrderBook({ pair, price }: Props) {
 
 	const retry = () => setAttempt((a) => a + 1);
 
-	if (error) return <ErrorMessage message={error} onRetry={retry} />;
-	if (!depth) return <p className="bg-surface p-4 text-sm text-muted-foreground">Loading order book…</p>;
+	if (error) return <ErrorMessage error={error} onRetry={retry} />;
+	if (!depth) return <p className="bg-surface p-4 text-sm text-muted-foreground">{text.loading}</p>;
 
 	const tick = 10 ** -pair.priceDecimals;
 	// a group of 10 ticks needs one decimal less, and so on
@@ -72,8 +74,8 @@ export default function OrderBook({ pair, price }: Props) {
 				))}
 			</div>
 			<div className="flex justify-between px-3 py-2 text-muted-foreground">
-				<span>Price ({QUOTE})</span>
-				<span>Amount ({pair.coin})</span>
+				<span>{text.price(QUOTE)}</span>
+				<span>{text.amount(pair.coin)}</span>
 			</div>
 			{/* highest ask on top, so the best ask sits next to the price */}
 			{[...shown.asks].reverse().map((l) => row(l, "ask"))}

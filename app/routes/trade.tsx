@@ -8,6 +8,7 @@ import PriceChart from "~/components/market/PriceChart";
 import ReconnectingNote from "~/components/ui/ReconnectingNote";
 import TradeForm from "~/components/trade/TradeForm";
 import TradeHistory from "~/components/portfolio/TradeHistory";
+import { useText } from "~/i18n/language";
 import { useEquityRecorder } from "~/state/equity";
 import { useLivePrices } from "~/state/live-prices";
 import { usePairs } from "~/state/pairs";
@@ -18,6 +19,7 @@ export default function Trade({ params }: Route.ComponentProps) {
 	// "/trade/btc" → "BTC"
 	const coin = params.coin.toUpperCase();
 	const { profile } = useProfile();
+	const text = useText();
 	const { pairs, error, retry } = usePairs();
 	// undefined = loading, null = not traded here
 	const pair = pairs && (pairs[coin] ?? null);
@@ -35,9 +37,11 @@ export default function Trade({ params }: Route.ComponentProps) {
 				<div className="flex w-full h-9/12 bg-blue-500">
 					<div className="flex flex-col w-4/5 bg-yellow-500 h-full">
 						<div className="w-full bg-green-500">
-							{error && <ErrorMessage message={error} onRetry={retry} />}
-							{!error && pair === undefined && <p className="bg-surface p-4 text-muted-foreground">Loading {coin}…</p>}
-							{pair === null && <p className="bg-surface p-4 text-muted-foreground">{coin} isn't traded on this platform.</p>}
+							{error && <ErrorMessage error={error} onRetry={retry} />}
+							{!error && pair === undefined && (
+								<p className="bg-surface p-4 text-muted-foreground">{text.common.loadingCoin(coin)}</p>
+							)}
+							{pair === null && <p className="bg-surface p-4 text-muted-foreground">{text.trade.notTraded(coin)}</p>}
 							{/* key: a new coin starts with fresh state instead of showing the previous coin's data */}
 							{pair && <CoinDetails key={pair.symbol} pair={pair} />}
 						</div>
@@ -52,7 +56,7 @@ export default function Trade({ params }: Route.ComponentProps) {
 					<div className="flex-1 min-h-0 overflow-y-auto">
 						{tab === "holdings" ? (
 							<>
-								{pricesError && <ErrorMessage message={pricesError} onRetry={retryPrices} />}
+								{pricesError && <ErrorMessage error={pricesError} onRetry={retryPrices} />}
 								{!live && <ReconnectingNote className="p-4" />}
 								<HoldingsList holdings={profile.holdings} prices={prices} pairs={pairs ?? {}} query="" />
 							</>

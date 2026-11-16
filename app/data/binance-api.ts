@@ -308,7 +308,7 @@ export function subscribeOrderBook(
 	symbol: string,
 	onUpdate: (depth: Depth) => void,
 	onLiveChange: (live: boolean) => void,
-	onError: (message: string) => void,
+	onError: (error: Error) => void,
 ) {
 	const bids = new Map<number, number>();
 	const asks = new Map<number, number>();
@@ -343,7 +343,7 @@ export function subscribeOrderBook(
 			// can't sync without a snapshot; Retry opens a new connection
 			stopped = true;
 			unsubscribe();
-			onError((e as Error).message);
+			onError(e as Error);
 		}
 	};
 

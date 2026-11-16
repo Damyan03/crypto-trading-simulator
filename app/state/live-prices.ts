@@ -5,7 +5,7 @@ import type { Prices } from "~/domain/profile";
 /** Prices of the given coins: fetched right away, then kept live by one stream */
 export function useLivePrices(coinList: string[]) {
 	const [prices, setPrices] = useState<Prices>({});
-	const [error, setError] = useState<string | null>(null);
+	const [error, setError] = useState<Error | null>(null);
 	const [attempt, setAttempt] = useState(0);
 	// false while the live connection is down and reconnecting
 	const [live, setLive] = useState(true);
@@ -17,9 +17,7 @@ export function useLivePrices(coinList: string[]) {
 	useEffect(() => {
 		if (!coins) return;
 		setError(null);
-		getPrices(coins.split(","))
-			.then(setPrices)
-			.catch((e: Error) => setError(e.message));
+		getPrices(coins.split(",")).then(setPrices).catch(setError);
 	}, [coins, attempt]);
 
 	// stream: live prices; the cleanup closes the connection

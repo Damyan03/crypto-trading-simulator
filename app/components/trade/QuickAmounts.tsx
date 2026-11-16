@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useText } from "~/i18n/language";
 
 interface Props {
 	/** Shown before the buttons */
@@ -13,6 +14,7 @@ interface Props {
 
 /** A row of shortcut buttons that fill in the amount */
 export default function QuickAmounts({ label, options, format = (o) => o, onPick, onEdit }: Props) {
+	const text = useText().quickAmounts;
 	// null unless editing
 	const [drafts, setDrafts] = useState<string[] | null>(null);
 
@@ -32,7 +34,7 @@ export default function QuickAmounts({ label, options, format = (o) => o, onPick
 							inputMode="decimal"
 							value={d}
 							onChange={(e) => setDrafts(drafts.map((x, j) => (j === i ? e.target.value : x)))}
-							aria-label={`${label} shortcut ${i + 1}`}
+							aria-label={text.shortcut(label, i + 1)}
 							className="w-0 flex-1 rounded border bg-muted px-1 py-1 text-center tabular-nums focus:outline-none focus:ring-2 focus:ring-ring"
 						/>
 					))
@@ -52,7 +54,7 @@ export default function QuickAmounts({ label, options, format = (o) => o, onPick
 					onClick={() => (drafts ? save(drafts) : setDrafts(options))}
 					className="px-1 text-primary hover:underline"
 				>
-					{drafts ? "Done" : "Edit"}
+					{drafts ? text.done : text.edit}
 				</button>
 			)}
 		</div>

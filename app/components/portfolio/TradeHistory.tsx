@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router";
 import { QUOTE, type Pair } from "~/data/binance-api";
 import type { Trade } from "~/domain/profile";
+import { useText } from "~/i18n/language";
 import { formatPrice, formatQuantity, formatTime, formatUsdt } from "~/utils/format";
 import { tradePath } from "~/utils/paths";
 import { matchesSearch } from "~/utils/search";
@@ -16,13 +17,14 @@ interface Props {
 /** Table of past trades, newest first */
 export default function TradeHistory({ trades, pairs, query }: Props) {
 	const navigate = useNavigate();
+	const { common, history } = useText();
 
-	if (trades.length === 0) return <p className="p-4 text-muted-foreground">No trades yet.</p>;
+	if (trades.length === 0) return <p className="p-4 text-muted-foreground">{history.empty}</p>;
 
 	// trades are stored oldest first
 	const rows = trades.filter((t) => matchesSearch(t.coin, query)).reverse();
 
-	if (rows.length === 0) return <p className="p-4 text-muted-foreground">No trades match "{query}".</p>;
+	if (rows.length === 0) return <p className="p-4 text-muted-foreground">{history.noMatch(query)}</p>;
 
 	// shared cell styles
 	const thLeft = "px-4 py-2 text-left font-normal";
@@ -33,13 +35,13 @@ export default function TradeHistory({ trades, pairs, query }: Props) {
 		<table className="w-full">
 			<thead className="sticky top-0 bg-muted text-xs text-muted-foreground">
 				<tr>
-					<th className={thLeft}>Time</th>
-					<th className={thLeft}>Coin</th>
-					<th className={thLeft}>Side</th>
-					<th className={th}>Price</th>
-					<th className={th}>Quantity</th>
-					<th className={th}>Total ({QUOTE})</th>
-					<th className={th}>Fee ({QUOTE})</th>
+					<th className={thLeft}>{history.time}</th>
+					<th className={thLeft}>{common.coin}</th>
+					<th className={thLeft}>{history.side}</th>
+					<th className={th}>{common.price}</th>
+					<th className={th}>{common.quantity}</th>
+					<th className={th}>{history.total(QUOTE)}</th>
+					<th className={th}>{history.fee(QUOTE)}</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -54,7 +56,7 @@ export default function TradeHistory({ trades, pairs, query }: Props) {
 							<td className="px-4 py-3 text-left whitespace-nowrap text-muted-foreground">{formatTime(t.time)}</td>
 							<td className="px-4 py-3 text-left font-semibold">{t.coin}</td>
 							<td className={`px-4 py-3 text-left font-semibold ${t.side === "BUY" ? "text-success" : "text-danger"}`}>
-								{t.side === "BUY" ? "Buy" : "Sell"}
+								{common.side[t.side]}
 							</td>
 							<td className={td}>{formatPrice(t.price, pair?.priceDecimals)}</td>
 							<td className={td}>{formatQuantity(t.quantity, pair?.quantityDecimals)}</td>

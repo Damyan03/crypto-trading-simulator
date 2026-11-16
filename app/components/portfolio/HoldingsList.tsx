@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router";
 import { QUOTE, type Pair } from "~/data/binance-api";
 import type { Holdings, Prices } from "~/domain/profile";
+import { useText } from "~/i18n/language";
 import { changeColor, formatPercent, formatPrice, formatQuantity, formatSignedUsdt, formatUsdt } from "~/utils/format";
 import { tradePath } from "~/utils/paths";
 import { matchesSearch } from "~/utils/search";
@@ -17,13 +18,14 @@ interface Props {
 /** Table of owned coins with their value and profit/loss */
 export default function HoldingsList({ holdings, prices, pairs, query }: Props) {
 	const navigate = useNavigate();
+	const { common, holdings: holdingsText } = useText();
 
 	if (Object.keys(holdings).length === 0) {
 		return (
 			<p className="p-4 text-muted-foreground">
-				No holdings yet.{" "}
+				{holdingsText.empty}{" "}
 				<Link to="/" className="text-primary hover:underline">
-					Discover coins
+					{holdingsText.discoverLink}
 				</Link>
 			</p>
 		);
@@ -42,7 +44,7 @@ export default function HoldingsList({ holdings, prices, pairs, query }: Props) 
 		// biggest position first
 		.sort((a, b) => (b.value ?? 0) - (a.value ?? 0));
 
-	if (rows.length === 0) return <p className="p-4 text-muted-foreground">No holdings match "{query}".</p>;
+	if (rows.length === 0) return <p className="p-4 text-muted-foreground">{holdingsText.noMatch(query)}</p>;
 
 	// shared cell styles
 	const th = "px-4 py-2 text-right font-normal whitespace-nowrap";
@@ -52,12 +54,12 @@ export default function HoldingsList({ holdings, prices, pairs, query }: Props) 
 		<table className="w-full">
 			<thead className="sticky top-0 bg-muted text-xs text-muted-foreground">
 				<tr>
-					<th className="px-4 py-2 text-left font-normal">Coin</th>
-					<th className={th}>Quantity</th>
-					<th className={th}>Avg price</th>
-					<th className={th}>Price</th>
-					<th className={th}>Value ({QUOTE})</th>
-					<th className={th}>Profit / loss</th>
+					<th className="px-4 py-2 text-left font-normal">{common.coin}</th>
+					<th className={th}>{common.quantity}</th>
+					<th className={th}>{holdingsText.avgPrice}</th>
+					<th className={th}>{common.price}</th>
+					<th className={th}>{holdingsText.value(QUOTE)}</th>
+					<th className={th}>{common.profitLoss}</th>
 				</tr>
 			</thead>
 			<tbody>

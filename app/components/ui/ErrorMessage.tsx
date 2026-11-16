@@ -1,15 +1,18 @@
+import { errorText, useText } from "~/i18n/language";
+
 interface Props {
-	message: string;
+	error: Error;
 	onRetry: () => void;
 }
 
-/** Error text with a Retry button */
-export default function ErrorMessage({ message, onRetry }: Props) {
+/** The error in the current language, with a Retry button */
+export default function ErrorMessage({ error, onRetry }: Props) {
+	const text = useText();
 	return (
 		<div className="flex items-center gap-4 p-4 text-danger">
-			<span>{message}</span>
+			<span>{errorText(text, error)}</span>
 			<button onClick={onRetry} className="rounded bg-primary px-3 py-1 text-white hover:bg-primary/90">
-				Retry
+				{text.common.retry}
 			</button>
 		</div>
 	);

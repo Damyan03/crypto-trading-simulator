@@ -3,6 +3,7 @@ import QuickAmounts from "~/components/trade/QuickAmounts";
 import { QUOTE, type Pair } from "~/data/binance-api";
 import type { Side } from "~/domain/profile";
 import { applyTrade, quantityFor, roundDown, tradeFee, validateTrade } from "~/domain/trade-logic";
+import { useText } from "~/i18n/language";
 import { usePercentPresets } from "~/state/presets";
 import { useProfile } from "~/state/store";
 import { decimalsIn, parseAmount } from "~/utils/amount";
@@ -20,6 +21,7 @@ interface Props {
 export default function TradeForm({ pair, price }: Props) {
 	const { coin, priceDecimals, quantityDecimals } = pair;
 	const { profile, setProfile } = useProfile();
+	const { common, trade } = useText();
 	const [percents, setPercents] = usePercentPresets();
 	const [amount, setAmount] = useState("");
 	// currency the amount is typed in
@@ -54,17 +56,21 @@ export default function TradeForm({ pair, price }: Props) {
 		);
 
 	const submit = (side: Side) => {
-		if (value === null) return setMessage({ text: "Enter an amount, e.g. 0.5.", ok: false });
-		if (tooManyDecimals) return setMessage({ text: `${coin} allows at most ${quantityDecimals} decimals.`, ok: false });
+		if (value === null) return setMessage({ text: trade.enterAmount, ok: false });
+		if (tooManyDecimals) return setMessage({ text: trade.tooManyDecimals(coin, quantityDecimals), ok: false });
 		if (quantity === null || price === undefined) return;
 
 		const request = { side, coin, quantity, price };
-		const invalid = validateTrade(profile, request);
-		if (invalid) return setMessage({ text: invalid, ok: false });
+		const rejection = validateTrade(profile, request);
+		if (rejection) return setMessage({ text: trade.rejected[rejection](coin), ok: false });
 
 		setProfile(applyTrade(profile, request));
 		setMessage({
-			text: `${side === "BUY" ? "Bought" : "Sold"} ${formatQuantity(quantity, quantityDecimals)} ${coin} at ${formatPrice(price, priceDecimals)} ${QUOTE}, fee ${formatUsdt(tradeFee(quantity, price))} ${QUOTE}.`,
+			text: trade.done[side](
+				`${formatQuantity(quantity, quantityDecimals)} ${coin}`,
+				`${formatPrice(price, priceDecimals)} ${QUOTE}`,
+				`${formatUsdt(tradeFee(quantity, price))} ${QUOTE}`,
+			),
 			ok: true,
 		});
 	};
@@ -81,8 +87,8 @@ export default function TradeForm({ pair, price }: Props) {
 					inputMode="decimal"
 					value={amount}
 					onChange={(e) => changeAmount(e.target.value)}
-					placeholder={`Amount in ${unit === "coin" ? coin : QUOTE}`}
-					aria-label={`Amount in ${unit === "coin" ? coin : QUOTE}`}
+					placeholder={trade.amountIn(unit === "coin" ? coin : QUOTE)}
+					aria-label={trade.amountIn(unit === "coin" ? coin : QUOTE)}
 					className="min-w-0 flex-1 bg-transparent px-3 py-2 tabular-nums placeholder:text-muted-foreground focus:outline-none"
 				/>
 				{(["coin", "quote"] as const).map((u) => (
@@ -98,16 +104,22 @@ export default function TradeForm({ pair, price }: Props) {
 			</div>
 
 			{owned > 0 && (
-				<QuickAmounts label="Owned" options={percents} format={(p) => `${p}%`} onPick={pickPercent} onEdit={setPercents} />
+				<QuickAmounts
+					label={trade.owned}
+					options={percents}
+					format={(p) => `${p}%`}
+					onPick={pickPercent}
+					onEdit={setPercents}
+				/>
 			)}
 
 			<dl className="flex flex-col gap-1 text-sm tabular-nums">
 				<div className={row}>
-					<dt className="text-muted-foreground">Price</dt>
+					<dt className="text-muted-foreground">{common.price}</dt>
 					<dd>{price === undefined ? "…" : `${formatPrice(price, priceDecimals)} ${QUOTE}`}</dd>
 				</div>
 				<div className={row}>
-					<dt className="text-muted-foreground">Estimate</dt>
+					<dt className="text-muted-foreground">{trade.estimate}</dt>
 					<dd>
 						{estimate
 							? `${formatQuantity(estimate.quantity, quantityDecimals)} ${coin} ≈ ${formatUsdt(estimate.quantity * estimate.price)} ${QUOTE}`
@@ -115,11 +127,11 @@ export default function TradeForm({ pair, price }: Props) {
 					</dd>
 				</div>
 				<div className={row}>
-					<dt className="text-muted-foreground">Fee</dt>
+					<dt className="text-muted-foreground">{trade.fee}</dt>
 					<dd>{estimate ? `${formatUsdt(tradeFee(estimate.quantity, estimate.price))} ${QUOTE}` : "—"}</dd>
 				</div>
 				<div className={row}>
-					<dt className="text-muted-foreground">Available</dt>
+					<dt className="text-muted-foreground">{trade.available}</dt>
 					<dd className="text-right">
 						{formatUsdt(profile.balance)} {QUOTE} · {formatQuantity(owned, quantityDecimals)} {coin}
 					</dd>
@@ -133,7 +145,7 @@ export default function TradeForm({ pair, price }: Props) {
 					disabled={price === undefined}
 					className="rounded bg-success py-2 font-semibold text-white hover:bg-success/90 disabled:opacity-50"
 				>
-					Buy
+					{common.side.BUY}
 				</button>
 				<button
 					type="button"
@@ -141,7 +153,7 @@ export default function TradeForm({ pair, price }: Props) {
 					disabled={price === undefined}
 					className="rounded bg-danger py-2 font-semibold text-white hover:bg-danger/90 disabled:opacity-50"
 				>
-					Sell
+					{common.side.SELL}
 				</button>
 			</div>
 

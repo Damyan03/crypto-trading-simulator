@@ -1,15 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { QUOTE } from "~/data/binance-api";
 import { STARTING_BALANCE } from "~/domain/profile";
+import { errorText, useText } from "~/i18n/language";
 import { useProfile } from "~/state/store";
 import { formatUsdt } from "~/utils/format";
 
 /** Header dropdown with the account reset options */
 export default function ProfileMenu() {
 	const { reset, resetToDemo } = useProfile();
+	const allText = useText();
+	const text = allText.profileMenu;
 	const [open, setOpen] = useState(false);
 	const [loadingDemo, setLoadingDemo] = useState(false);
-	const [error, setError] = useState<string | null>(null);
+	const [error, setError] = useState<Error | null>(null);
 	const ref = useRef<HTMLDivElement>(null);
 
 	// a click anywhere outside closes the menu
@@ -25,21 +28,21 @@ export default function ProfileMenu() {
 	// both ask first: the old holdings and trades can't be restored
 	const resetToDefault = () => {
 		setOpen(false);
-		if (window.confirm(`Reset to ${formatUsdt(STARTING_BALANCE)} ${QUOTE}? All holdings and trades will be deleted.`)) {
+		if (window.confirm(text.confirmReset(`${formatUsdt(STARTING_BALANCE)} ${QUOTE}`))) {
 			reset();
 		}
 	};
 
 	// the menu stays open while the demo's past prices load, to show progress or the error
 	const loadDemo = async () => {
-		if (!window.confirm("Switch to the demo account? All holdings and trades will be replaced.")) return;
+		if (!window.confirm(text.confirmDemo)) return;
 		setError(null);
 		setLoadingDemo(true);
 		try {
 			await resetToDemo();
 			setOpen(false);
 		} catch (e) {
-			setError((e as Error).message);
+			setError(e as Error);
 		} finally {
 			setLoadingDemo(false);
 		}
@@ -55,17 +58,17 @@ export default function ProfileMenu() {
 	return (
 		<div ref={ref} className="relative ml-4">
 			<button type="button" onClick={toggle} className="rounded px-2 py-1 hover:bg-muted">
-				Profile ▾
+				{text.open} ▾
 			</button>
 			{open && (
 				<div className="absolute right-0 top-full z-10 mt-1 w-56 overflow-hidden rounded border bg-surface text-sm shadow-lg">
 					<button type="button" onClick={resetToDefault} disabled={loadingDemo} className={item}>
-						Reset to default
+						{text.resetToDefault}
 					</button>
 					<button type="button" onClick={loadDemo} disabled={loadingDemo} className={item}>
-						{loadingDemo ? "Loading demo…" : "Reset to demo account"}
+						{loadingDemo ? text.loadingDemo : text.resetToDemo}
 					</button>
-					{error && <p className="px-4 py-2 text-danger">Couldn't load the demo. {error}</p>}
+					{error && <p className="px-4 py-2 text-danger">{text.demoFailed(errorText(allText, error))}</p>}
 				</div>
 			)}
 		</div>

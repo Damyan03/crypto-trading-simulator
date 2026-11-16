@@ -2,6 +2,7 @@ import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration }
 
 import type { Route } from "./+types/root";
 import Header from "~/components/layout/Header";
+import { DICTIONARIES, LanguageProvider, startLanguage } from "~/i18n/language";
 import { ProfileProvider } from "~/state/store";
 import "./app.css";
 
@@ -39,26 +40,30 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
 	return (
-		// gives the header and every page access to the profile
-		<ProfileProvider>
-			<div className="flex h-dvh flex-col">
-				<Header />
-				<main className="min-h-0 flex-1 overflow-y-auto">
-					<Outlet />
-				</main>
-			</div>
-		</ProfileProvider>
+		// gives the header and every page access to the text and the profile
+		<LanguageProvider>
+			<ProfileProvider>
+				<div className="flex h-dvh flex-col">
+					<Header />
+					<main className="min-h-0 flex-1 overflow-y-auto">
+						<Outlet />
+					</main>
+				</div>
+			</ProfileProvider>
+		</LanguageProvider>
 	);
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-	let message = "Oops!";
-	let details = "An unexpected error occurred.";
+	// shown instead of App, so outside LanguageProvider
+	const text = DICTIONARIES[startLanguage()].errorPage;
+	let message = text.title;
+	let details = text.details;
 	let stack: string | undefined;
 
 	if (isRouteErrorResponse(error)) {
-		message = error.status === 404 ? "404" : "Error";
-		details = error.status === 404 ? "The requested page could not be found." : error.statusText || details;
+		message = error.status === 404 ? text.notFoundTitle : text.errorTitle;
+		details = error.status === 404 ? text.notFound : error.statusText || details;
 	} else if (import.meta.env.DEV && error && error instanceof Error) {
 		details = error.message;
 		stack = error.stack;

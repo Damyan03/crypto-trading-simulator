@@ -19,13 +19,14 @@ export const roundDown = (value: number, decimals: number) =>
 /** How many coins `usdt` buys at `price`, rounded down to the coin's `decimals` */
 export const quantityFor = (usdt: number, price: number, decimals: number) => roundDown(usdt / price, decimals);
 
+/** Why a trade can't happen: no amount, not enough cash (fee included), or not enough coins to sell */
+export type TradeRejection = "amount" | "cash" | "coins";
+
 /** Why the trade can't happen, or null if it can */
-export function validateTrade(profile: Profile, { side, coin, quantity, price }: TradeRequest): string | null {
-	if (!(quantity > 0)) return "Amount must be more than 0.";
-	if (side === "BUY" && quantity * price + tradeFee(quantity, price) > profile.balance) {
-		return "Not enough cash for the trade and its fee.";
-	}
-	if (side === "SELL" && quantity > (profile.holdings[coin]?.quantity ?? 0)) return `You don't own that much ${coin}.`;
+export function validateTrade(profile: Profile, { side, coin, quantity, price }: TradeRequest): TradeRejection | null {
+	if (!(quantity > 0)) return "amount";
+	if (side === "BUY" && quantity * price + tradeFee(quantity, price) > profile.balance) return "cash";
+	if (side === "SELL" && quantity > (profile.holdings[coin]?.quantity ?? 0)) return "coins";
 	return null;
 }
 
