@@ -60,19 +60,36 @@ export function createProfile(now = Date.now()): Profile {
 	return { balance: STARTING_BALANCE, holdings: {}, trades: [], equity: [{ time: now, value: STARTING_BALANCE }] };
 }
 
-/** cash + holdings total value */
-export function totalValue(profile: Profile, prices: Prices): number | null {
-	let total = profile.balance;
-	for (const [coin, { quantity }] of Object.entries(profile.holdings)) {
+/** value of all holdings; null until every held coin's price is loaded */
+export function holdingsValue(holdings: Holdings, prices: Prices): number | null {
+	let total = 0;
+	for (const [coin, { quantity }] of Object.entries(holdings)) {
 		const price = prices[coin];
-		if (price === undefined) return null; // price not loaded yet
+		if (price === undefined) return null;
 		total += quantity * price;
 	}
 	return total;
 }
 
-/** profit/loss vs the starting balance */
+/** cash + holdings total value; null until every held coin's price is loaded */
+export function totalValue(profile: Profile, prices: Prices): number | null {
+	const holdings = holdingsValue(profile.holdings, prices);
+	return holdings === null ? null : profile.balance + holdings;
+}
+
+/** gain or loss of `value` vs `cost`, in USDT and % */
+function gain(value: number, cost: number) {
+	const amount = value - cost;
+	return { amount, percent: (amount / cost) * 100 };
+}
+
+/** profit/loss of the account vs the starting balance */
 export function profitLoss(total: number) {
-	const amount = total - STARTING_BALANCE;
-	return { amount, percent: (amount / STARTING_BALANCE) * 100 };
+	return gain(total, STARTING_BALANCE);
+}
+
+/** a holding's value at `price`, and its profit/loss vs what it cost (fees included) */
+export function holdingStats(holding: Holding, price: number) {
+	const value = holding.quantity * price;
+	return { value, pnl: gain(value, holding.quantity * holding.avgPrice) };
 }

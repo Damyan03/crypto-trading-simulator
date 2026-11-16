@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import Notice from "~/components/ui/Notice";
 import { LinkRow, Table, Td, Th } from "~/components/ui/Table";
 import { QUOTE, type Pair } from "~/data/binance-api";
-import type { Holdings, Prices } from "~/domain/profile";
+import { holdingStats, type Holdings, type Prices } from "~/domain/profile";
 import { useText } from "~/i18n/language";
 import { changeColor, formatPercent, formatPrice, formatQuantity, formatSignedUsdt, formatUsdt } from "~/utils/format";
 import { tradePath } from "~/utils/paths";
@@ -32,18 +32,16 @@ export default function HoldingsList({ holdings, prices, pairs, query }: Props) 
 		);
 	}
 
-	// one row per matching coin; values are null until its price is loaded
+	// one row per matching coin; stats are null until its price is loaded
 	const rows = Object.entries(holdings)
 		.filter(([coin]) => matchesSearch(coin, query))
-		.map(([coin, { quantity, avgPrice }]) => {
+		.map(([coin, holding]) => {
 			const price = prices[coin];
-			const value = price === undefined ? null : quantity * price;
-			const pnl = value === null ? null : value - quantity * avgPrice;
-			const pnlPercent = price === undefined ? null : ((price - avgPrice) / avgPrice) * 100;
-			return { coin, quantity, avgPrice, price, value, pnl, pnlPercent, pair: pairs[coin] };
+			const stats = price === undefined ? null : holdingStats(holding, price);
+			return { coin, ...holding, price, stats, pair: pairs[coin] };
 		})
 		// biggest position first
-		.sort((a, b) => (b.value ?? 0) - (a.value ?? 0));
+		.sort((a, b) => (b.stats?.value ?? 0) - (a.stats?.value ?? 0));
 
 	if (rows.length === 0) return <Notice>{holdingsText.noMatch(query)}</Notice>;
 
@@ -68,9 +66,9 @@ export default function HoldingsList({ holdings, prices, pairs, query }: Props) 
 					<Td>{formatQuantity(r.quantity, r.pair?.quantityDecimals)}</Td>
 					<Td>{formatPrice(r.avgPrice, r.pair?.priceDecimals)}</Td>
 					<Td>{r.price === undefined ? "…" : formatPrice(r.price, r.pair?.priceDecimals)}</Td>
-					<Td>{r.value === null ? "…" : formatUsdt(r.value)}</Td>
-					<Td className={changeColor(r.pnl ?? 0)}>
-						{r.pnl === null || r.pnlPercent === null ? "…" : `${formatSignedUsdt(r.pnl)} (${formatPercent(r.pnlPercent)})`}
+					<Td>{r.stats ? formatUsdt(r.stats.value) : "…"}</Td>
+					<Td className={changeColor(r.stats?.pnl.amount ?? 0)}>
+						{r.stats ? `${formatSignedUsdt(r.stats.pnl.amount)} (${formatPercent(r.stats.pnl.percent)})` : "…"}
 					</Td>
 				</LinkRow>
 			))}
