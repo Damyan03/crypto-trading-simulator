@@ -21,11 +21,10 @@ function useSavedPresets(key: string, defaults: string[], isValid: (value: strin
 	return [presets, update] as const;
 }
 
-const isAmount = (v: string) => (parseAmount(v) ?? 0) > 0;
-const isPercent = (v: string) => isAmount(v) && (parseAmount(v) ?? 0) <= 100;
-
-/** Quick coin amounts for the trade form */
-export const useAmountPresets = () => useSavedPresets("amount-presets", ["0.01", "0.05", "0.1", "0.2"], isAmount);
+const isPercent = (v: string) => {
+	const percent = parseAmount(v) ?? 0;
+	return percent > 0 && percent <= 100;
+};
 
 /** Sell shortcuts: % of the coins you own */
 export const usePercentPresets = () => useSavedPresets("percent-presets", ["10", "25", "50", "100"], isPercent);

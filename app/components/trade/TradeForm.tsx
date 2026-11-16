@@ -3,7 +3,7 @@ import QuickAmounts from "~/components/trade/QuickAmounts";
 import { QUOTE, type Pair } from "~/data/binance-api";
 import type { Side } from "~/domain/profile";
 import { applyTrade, quantityFor, roundDown, tradeFee, validateTrade } from "~/domain/trade-logic";
-import { useAmountPresets, usePercentPresets } from "~/state/presets";
+import { usePercentPresets } from "~/state/presets";
 import { useProfile } from "~/state/store";
 import { decimalsIn, parseAmount } from "~/utils/amount";
 import { formatPrice, formatQuantity, formatUsdt } from "~/utils/format";
@@ -20,7 +20,6 @@ interface Props {
 export default function TradeForm({ pair, price }: Props) {
 	const { coin, priceDecimals, quantityDecimals } = pair;
 	const { profile, setProfile } = useProfile();
-	const [presets, setPresets] = useAmountPresets();
 	const [percents, setPercents] = usePercentPresets();
 	const [amount, setAmount] = useState("");
 	// currency the amount is typed in
@@ -47,8 +46,7 @@ export default function TradeForm({ pair, price }: Props) {
 		if (u !== unit) changeAmount("", u);
 	};
 
-	// shortcuts are coin amounts
-	const pickPreset = (i: number) => changeAmount(presets[i], "coin");
+	// fills in a coin amount
 	const pickPercent = (i: number) =>
 		changeAmount(
 			roundDown((owned * (parseAmount(percents[i]) ?? 0)) / 100, quantityDecimals).toFixed(quantityDecimals),
@@ -99,12 +97,9 @@ export default function TradeForm({ pair, price }: Props) {
 				))}
 			</div>
 
-			<div className="flex flex-col gap-2">
-				<QuickAmounts label={coin} options={presets} onPick={pickPreset} onEdit={setPresets} />
-				{owned > 0 && (
-					<QuickAmounts label="Owned" options={percents} format={(p) => `${p}%`} onPick={pickPercent} onEdit={setPercents} />
-				)}
-			</div>
+			{owned > 0 && (
+				<QuickAmounts label="Owned" options={percents} format={(p) => `${p}%`} onPick={pickPercent} onEdit={setPercents} />
+			)}
 
 			<dl className="flex flex-col gap-1 text-sm tabular-nums">
 				<div className={row}>
