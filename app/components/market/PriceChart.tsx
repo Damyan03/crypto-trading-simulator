@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { CandlestickSeries, createChart, type UTCTimestamp } from "lightweight-charts";
-import ErrorMessage from "~/components/ErrorMessage";
-import ReconnectingNote from "~/components/ReconnectingNote";
+import ErrorMessage from "~/components/ui/ErrorMessage";
+import ReconnectingNote from "~/components/ui/ReconnectingNote";
 import { getCandles, subscribeCandles, type Candle, type Pair } from "~/data/binance-api";
 import { chartOptions, themeColor } from "~/utils/chart";
 

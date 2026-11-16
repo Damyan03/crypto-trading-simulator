@@ -1,6 +1,6 @@
 import { useState } from "react";
-import CoinList from "~/components/CoinList";
-import SearchBox from "~/components/SearchBox";
+import CoinList from "~/components/market/CoinList";
+import SearchBox from "~/components/ui/SearchBox";
 
 export default function Discover() {
 	// text in the search box, passed to the list as a filter

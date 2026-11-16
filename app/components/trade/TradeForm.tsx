@@ -1,5 +1,5 @@
 import { useState } from "react";
-import QuickAmounts from "~/components/QuickAmounts";
+import QuickAmounts from "~/components/trade/QuickAmounts";
 import { QUOTE, type Pair } from "~/data/binance-api";
 import type { Side } from "~/domain/profile";
 import { applyTrade, quantityFor, roundDown, tradeFee, validateTrade } from "~/domain/trade-logic";

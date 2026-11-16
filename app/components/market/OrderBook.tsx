@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import ErrorMessage from "~/components/ErrorMessage";
-import ReconnectingNote from "~/components/ReconnectingNote";
+import ErrorMessage from "~/components/ui/ErrorMessage";
+import ReconnectingNote from "~/components/ui/ReconnectingNote";
 import { QUOTE, subscribeOrderBook, type Pair } from "~/data/binance-api";
 import { groupDepth, type Depth, type DepthLevel } from "~/domain/order-book";
 import { formatPrice, formatQuantity } from "~/utils/format";

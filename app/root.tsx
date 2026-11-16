@@ -1,7 +1,7 @@
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 
 import type { Route } from "./+types/root";
-import Header from "~/components/Header";
+import Header from "~/components/layout/Header";
 import { ProfileProvider } from "~/state/store";
 import "./app.css";
 

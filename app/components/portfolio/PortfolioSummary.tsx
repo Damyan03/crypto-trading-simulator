@@ -1,4 +1,4 @@
-import Stat from "~/components/Stat";
+import Stat from "~/components/ui/Stat";
 import { QUOTE } from "~/data/binance-api";
 import { profitLoss, totalValue, type Prices, type Profile } from "~/domain/profile";
 import { changeColor, formatPercent, formatSignedUsdt, formatUsdt } from "~/utils/format";

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import ErrorMessage from "~/components/ErrorMessage";
-import ReconnectingNote from "~/components/ReconnectingNote";
-import Stat from "~/components/Stat";
+import ErrorMessage from "~/components/ui/ErrorMessage";
+import ReconnectingNote from "~/components/ui/ReconnectingNote";
+import Stat from "~/components/ui/Stat";
 import { getCoinStats, QUOTE, subscribeCoinStats, type CoinStats, type Pair } from "~/data/binance-api";
 import { getCoinInfo, type CoinInfo } from "~/data/coingecko-api";
 import { changeColor, formatPercent, formatPrice, formatVolume } from "~/utils/format";
