@@ -3,12 +3,43 @@ import { QUOTE } from "~/data/binance-api";
 import { STARTING_BALANCE } from "~/domain/profile";
 import { DICTIONARIES, errorText, LANGUAGES, useLanguage } from "~/i18n/language";
 import { useProfile } from "~/state/store";
+import { THEMES, useTheme } from "~/state/theme";
 import { formatUsdt } from "~/utils/format";
 
-/** Header dropdown with the account reset options and the language picker */
+interface OptionGroupProps<T extends string> {
+	title: string;
+	options: T[];
+	current: T;
+	label: (option: T) => string;
+	onPick: (option: T) => void;
+}
+
+/** A titled list of choices; the current one is bold with a check mark */
+function OptionGroup<T extends string>({ title, options, current, label, onPick }: OptionGroupProps<T>) {
+	return (
+		<div className="border-t">
+			<p className="px-4 pt-2 text-xs text-muted-foreground">{title}</p>
+			{options.map((option) => (
+				<button
+					key={option}
+					type="button"
+					onClick={() => onPick(option)}
+					aria-pressed={option === current}
+					className={`flex w-full justify-between px-4 py-2 hover:bg-muted ${option === current ? "font-semibold" : ""}`}
+				>
+					{label(option)}
+					{option === current && <span>✓</span>}
+				</button>
+			))}
+		</div>
+	);
+}
+
+/** Header dropdown with the account reset options, theme and language */
 export default function ProfileMenu() {
 	const { reset, resetToDemo } = useProfile();
 	const { language, setLanguage, text } = useLanguage();
+	const { theme, setTheme } = useTheme();
 	const { profileMenu } = text;
 	const [open, setOpen] = useState(false);
 	const [loadingDemo, setLoadingDemo] = useState(false);
@@ -70,21 +101,20 @@ export default function ProfileMenu() {
 					</button>
 					{error && <p className="px-4 py-2 text-danger">{profileMenu.demoFailed(errorText(text, error))}</p>}
 
-					<div className="border-t">
-						<p className="px-4 pt-2 text-xs text-muted-foreground">{profileMenu.language}</p>
-						{LANGUAGES.map((code) => (
-							<button
-								key={code}
-								type="button"
-								onClick={() => setLanguage(code)}
-								aria-pressed={code === language}
-								className={`flex w-full justify-between px-4 py-2 hover:bg-muted ${code === language ? "font-semibold" : ""}`}
-							>
-								{DICTIONARIES[code].languageName}
-								{code === language && <span>✓</span>}
-							</button>
-						))}
-					</div>
+					<OptionGroup
+						title={profileMenu.theme}
+						options={THEMES}
+						current={theme}
+						label={(option) => profileMenu.themes[option]}
+						onPick={setTheme}
+					/>
+					<OptionGroup
+						title={profileMenu.language}
+						options={LANGUAGES}
+						current={language}
+						label={(code) => DICTIONARIES[code].languageName}
+						onPick={setLanguage}
+					/>
 				</div>
 			)}
 		</div>

@@ -4,6 +4,7 @@ import type { Route } from "./+types/root";
 import Header from "~/components/layout/Header";
 import { DICTIONARIES, LanguageProvider, startLanguage } from "~/i18n/language";
 import { ProfileProvider } from "~/state/store";
+import { ThemeProvider } from "~/state/theme";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -40,17 +41,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
 	return (
-		// gives the header and every page access to the text and the profile
-		<LanguageProvider>
-			<ProfileProvider>
-				<div className="flex h-dvh flex-col">
-					<Header />
-					<main className="min-h-0 flex-1 overflow-y-auto">
-						<Outlet />
-					</main>
-				</div>
-			</ProfileProvider>
-		</LanguageProvider>
+		// gives the header and every page access to the theme, the text and the profile
+		<ThemeProvider>
+			<LanguageProvider>
+				<ProfileProvider>
+					<div className="flex h-dvh flex-col">
+						<Header />
+						<main className="min-h-0 flex-1 overflow-y-auto">
+							<Outlet />
+						</main>
+					</div>
+				</ProfileProvider>
+			</LanguageProvider>
+		</ThemeProvider>
 	);
 }
 

@@ -41,6 +41,8 @@ export const en = {
 		confirmDemo: "Switch to the demo account? All holdings and trades will be replaced.",
 		demoFailed: (error: string) => `Couldn't load the demo. ${error}`,
 		language: "Language",
+		theme: "Theme",
+		themes: { light: "Light", dark: "Dark" },
 	},
 	search: {
 		label: "Search coins",

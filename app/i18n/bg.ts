@@ -39,6 +39,8 @@ export const bg: Dictionary = {
 		confirmDemo: "Превключване към демо акаунта? Всички активи и сделки ще бъдат заменени.",
 		demoFailed: (error: string) => `Демото не можа да се зареди. ${error}`,
 		language: "Език",
+		theme: "Тема",
+		themes: { light: "Светла", dark: "Тъмна" },
 	},
 	search: {
 		label: "Търсене на монети",
