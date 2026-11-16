@@ -71,6 +71,7 @@ export const bg: Dictionary = {
 	},
 	priceChart: {
 		loading: "Зареждане на графиката…",
+		timeframes: { "15m": "15м", "1h": "1ч", "4h": "4ч", "1d": "1д", "1w": "1седм." },
 	},
 	orderBook: {
 		loading: "Зареждане на книгата с поръчки…",

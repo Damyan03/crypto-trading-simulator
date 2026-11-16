@@ -157,8 +157,12 @@ export async function getCoinStats(symbol: string): Promise<CoinStats> {
 	};
 }
 
+/** Candle lengths Binance supports ("Kline/Candlestick chart intervals" in its docs); m = minutes, M = months */
+export type CandleInterval =
+	"1s" | "1m" | "3m" | "5m" | "15m" | "30m" | "1h" | "2h" | "4h" | "6h" | "8h" | "12h" | "1d" | "3d" | "1w" | "1M";
+
 /** Candles for one pair, oldest first, e.g. getCandles("BTCUSDT", "1h") */
-export async function getCandles(symbol: string, interval: string, limit = 500): Promise<Candle[]> {
+export async function getCandles(symbol: string, interval: CandleInterval, limit = 500): Promise<Candle[]> {
 	// each kline is [openTime, open, high, low, close, volume, …]
 	const data = await get<[number, string, string, string, string][]>(
 		`/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`,
@@ -228,7 +232,7 @@ export const subscribeCoinStats = (
 /** Live updates of the current candle, every 2 seconds; a new start time means a new candle */
 export const subscribeCandles = (
 	symbol: string,
-	interval: string,
+	interval: CandleInterval,
 	onUpdate: (candle: Candle) => void,
 	onLiveChange: (live: boolean) => void,
 ) =>
