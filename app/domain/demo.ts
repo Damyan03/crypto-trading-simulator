@@ -8,13 +8,13 @@ export const DEMO_COINS = ["BTC", "ETH", "SOL"];
 /** Hourly prices the demo needs (8 days): the first opens the account, the last is the current hour */
 export const DEMO_HOURS = 8 * 24;
 
-// USDT for each coin's first buy, so later trades have coins to sell
+// USDT for each coin's first buy
 const OPENING_BUY = 1_500;
 
 /**
- * The demo's trade in `hour`, for the coin whose turn it is (they take turns hour by hour).
+ * The demo's trade in `hour` for the coin whose turn it is (coins take turns hour by hour).
  * After one opening buy per coin: every 4th hour sells a quarter of that coin, the other hours buy 30–120 USDT.
- * A pattern rather than random, so every demo account trades the same way.
+ * A fixed pattern, not random.
  */
 function demoTrade(profile: Profile, hour: number, coin: string, price: number, decimals: number): TradeRequest {
 	const opening = hour <= DEMO_COINS.length;
@@ -27,9 +27,9 @@ function demoTrade(profile: Profile, hour: number, coin: string, price: number, 
 }
 
 /**
- * An account that traded most hours of the past days at real prices, made with the real trade logic so everything
- * adds up. `history`: each demo coin's price at the start of each hour, oldest first; `decimals`: each coin's
- * quantity decimals. One equity point per hour.
+ * An account that traded most hours of the past days at real prices, through the real trade logic.
+ * `history`: each demo coin's price at the start of each hour, oldest first; `decimals`: each coin's quantity
+ * decimals. One equity point per hour.
  */
 export function createDemoProfile(history: PriceSnapshot[], decimals: Record<string, number>): Profile {
 	let profile = createProfile(history[0].time);
@@ -38,7 +38,7 @@ export function createDemoProfile(history: PriceSnapshot[], decimals: Record<str
 		if (hour === 0) return;
 		const coin = DEMO_COINS[hour % DEMO_COINS.length];
 		const request = demoTrade(profile, hour, coin, prices[coin], decimals[coin]);
-		// skipped if it can't happen, e.g. not enough cash at that price
+		// invalid trades are skipped, e.g. not enough cash
 		if (!validateTrade(profile, request)) profile = applyTrade(profile, request, time);
 		profile = addEquityPoint(profile, totalValue(profile, prices) ?? profile.balance, time);
 	});

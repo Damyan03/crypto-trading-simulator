@@ -41,7 +41,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 		return () => media.removeEventListener("change", update);
 	}, []);
 
-	// before paint, so the page never shows the other theme; theme.css reads data-theme
+	// before paint: no flash of the other theme; theme.css reads data-theme
 	useLayoutEffect(() => {
 		document.documentElement.dataset.theme = theme;
 	}, [theme]);

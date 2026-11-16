@@ -1,6 +1,6 @@
 import { ColorType, type ChartOptions, type DeepPartial } from "lightweight-charts";
 
-/** Resolves a theme colour, e.g. "--color-success", to a plain colour the chart's canvas understands */
+/** A theme color, e.g. "--color-success", as a plain color for the chart's canvas */
 export function themeColor(element: HTMLElement, variable: string) {
 	const probe = document.createElement("span");
 	probe.style.color = `var(${variable})`;
@@ -10,7 +10,7 @@ export function themeColor(element: HTMLElement, variable: string) {
 	return color;
 }
 
-/** Options every chart shares: theme colours, time axis and the TradingView logo */
+/** Options every chart shares: theme colors, time axis and the TradingView logo */
 export function chartOptions(container: HTMLElement): DeepPartial<ChartOptions> {
 	const color = (variable: string) => themeColor(container, variable);
 	return {
@@ -18,7 +18,7 @@ export function chartOptions(container: HTMLElement): DeepPartial<ChartOptions> 
 		layout: {
 			background: { type: ColorType.Solid, color: color("--color-surface") },
 			textColor: color("--color-muted-foreground"),
-			// TradingView link on the chart, required by the library's licence
+			// TradingView link on the chart, required by the library's license
 			attributionLogo: true,
 		},
 		grid: {

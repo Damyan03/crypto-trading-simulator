@@ -7,7 +7,7 @@ const BASE_URL = "https://api.binance.com/api/v3";
 // order book snapshot levels per side: the most Binance allows (weight 250)
 const BOOK_LIMIT = 5000;
 
-// Pair list cache: storage key, format version, kept for 1 hour
+// pair list cache: storage key, format version, max age (1 hour)
 const PAIRS_KEY = "pairs";
 const PAIRS_VERSION = 1;
 const PAIRS_MAX_AGE = 60 * 60 * 1000;
@@ -61,7 +61,7 @@ export interface CoinStats {
 	trades: number;
 }
 
-/** Candle lengths Binance supports ("Kline/Candlestick chart intervals" in its docs); m = minutes, M = months */
+/** Kline intervals Binance supports; m = minutes, M = months */
 export type CandleInterval =
 	"1s" | "1m" | "3m" | "5m" | "15m" | "30m" | "1h" | "2h" | "4h" | "6h" | "8h" | "12h" | "1d" | "3d" | "1w" | "1M";
 
@@ -85,7 +85,7 @@ export const toTicker = (symbol: string, open: string, last: string, quoteVolume
 /** GET request to Binance API */
 const get = <T>(path: string) => getJson<T>(BASE_URL + path, "Binance");
 
-/** Counts decimal steps in a string, e.g. "0.00100" => 3 */
+/** Decimals in a step size, e.g. "0.00100" → 3 */
 const countDecimals = (step: string) => step.replace(/0+$/, "").split(".")[1]?.length ?? 0;
 
 /** Downloads every USDT pair that is currently trading */
@@ -126,7 +126,7 @@ async function getTickers(): Promise<Ticker[]> {
 /** Trading pairs with their 24h stats */
 export async function getMarkets(): Promise<Market[]> {
 	const [pairs, tickers] = await Promise.all([getTradingPairs(), getTickers()]);
-	// match each pair with its stats; pairs without stats are dropped
+	// pairs without stats are dropped
 	const bySymbol = new Map(tickers.map((t) => [t.symbol, t]));
 	return pairs.flatMap((pair) => {
 		const ticker = bySymbol.get(pair.symbol);
@@ -190,8 +190,7 @@ export async function getCandles(
 }
 
 /**
- * Each coin's opening price for the last `count` candles of `interval`, oldest first; the last is the current one,
- * e.g. getPriceHistory(["BTC", "ETH"], "1h", 24) for every hour of the last day
+ * Each coin's opening price for the last `count` candles of `interval`, oldest first; the last is the current one
  */
 export async function getPriceHistory(
 	coins: string[],

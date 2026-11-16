@@ -23,9 +23,9 @@ export const addEquityPoint = (profile: Profile, value: number, time: number): P
 const STEPS = [1, 5, 15, 60, 240, 1440].map((minutes) => minutes * 60 * 1000);
 
 /**
- * The curve on an even time grid, so equal time takes equal width on a chart that spaces points evenly.
- * Picks the smallest step that gives at most `maxPoints` points. Each step shows the last value in it;
- * steps without a value get the straight line between their neighbours. `points` must be oldest first.
+ * The curve resampled onto an even time grid, with the smallest step that gives at most `maxPoints` points.
+ * Each step takes the last value in it; empty steps take the straight line between their neighbors.
+ * `points` must be oldest first.
  */
 export function evenEquity(points: EquityPoint[], maxPoints: number): EquityPoint[] {
 	if (points.length < 2) return points;

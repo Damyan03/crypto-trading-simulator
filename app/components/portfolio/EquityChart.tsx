@@ -18,10 +18,10 @@ interface Props {
 	points: EquityPoint[];
 }
 
-// enough for a smooth line; also sets the grid step, e.g. a week of history → hourly points
+// most points drawn; also sets the grid step, e.g. a week of history → hourly
 const MAX_CHART_POINTS = 500;
 
-/** The chart spaces points evenly, so they go on an even time grid first; times in seconds */
+/** Points on an even time grid (the chart spaces points evenly), times in seconds */
 const toChartData = (points: EquityPoint[]) =>
 	evenEquity(points, MAX_CHART_POINTS).map(({ time, value }) => ({
 		time: Math.floor(time / 1000) as UTCTimestamp,
@@ -55,7 +55,7 @@ export default function EquityChart({ points }: Props) {
 	const seriesRef = useRef<ISeriesApi<"Baseline"> | null>(null);
 	// dotted line at the starting balance
 	const startLineRef = useRef<IPriceLine | null>(null);
-	// the curve last drawn: zoom to fit on the first draw and when the account is replaced, not on every new point
+	// the curve last drawn; the view refits on the first draw and when the account is replaced
 	const drawnRef = useRef<{ start: number; length: number } | null>(null);
 
 	useEffect(() => {
@@ -96,13 +96,12 @@ export default function EquityChart({ points }: Props) {
 		seriesRef.current.setData(toChartData(points));
 		const start = points[0]?.time ?? 0;
 		const drawn = drawnRef.current;
-		// a replaced account starts earlier (demo) or has fewer points (reset); the oldest points dropping off
-		// past the limit makes it start later with the same count, which keeps the zoom
+		// replaced account: starts earlier (demo) or has fewer points (reset); dropping old points keeps the count
 		if (!drawn || start < drawn.start || points.length < drawn.length) chartRef.current.timeScale().fitContent();
 		drawnRef.current = { start, length: points.length };
 	}, [points]);
 
-	// the canvas doesn't follow CSS, so a theme change repaints it with the new colours
+	// a theme change repaints the canvas with the new colors
 	useEffect(() => {
 		const container = containerRef.current;
 		if (!container) return;

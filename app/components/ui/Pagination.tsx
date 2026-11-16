@@ -98,7 +98,7 @@ interface PageJumpProps {
 /** A "…" gap you can type a page number into; Enter or leaving the field jumps there, Escape cancels */
 function PageJump({ pageCount, label, onJump }: PageJumpProps) {
 	const [value, setValue] = useState("");
-	// set by Escape: the blur that follows still sees the typed value, so it must not jump
+	// set by Escape; the blur that follows then doesn't jump
 	const cancelledRef = useRef(false);
 
 	// numbers past either end go to the first or last page; anything else is ignored

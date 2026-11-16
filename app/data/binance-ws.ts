@@ -13,6 +13,7 @@ import {
 
 // Binance live market data, combined streams: "/stream?streams=a/b/c"
 const STREAM_URL = "wss://stream.binance.com:9443/stream?streams=";
+// ms before reconnecting a dropped stream
 const RECONNECT_DELAY = 3000;
 
 /**
@@ -130,7 +131,7 @@ function setLevels(book: Map<number, number>, levels: RawLevels) {
 	}
 }
 
-/** Sorted with `order` (the docs don't state one) */
+/** The book's levels as a list sorted by `order` */
 const toLevels = (book: Map<number, number>, order: (a: number, b: number) => number) =>
 	[...book].sort(([a], [b]) => order(a, b)).map(([price, quantity]) => ({ price, quantity }));
 

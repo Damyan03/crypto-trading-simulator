@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { load, save } from "~/data/storage";
 import { parseAmount } from "~/utils/amount";
 
-// Bump the version when the saved shape changes; old saves are then ignored
+// format version; saves with another version are ignored
 const STORAGE_VERSION = 1;
 
 /** Editable shortcut values saved under `key`; edited values that fail `isValid` keep their old value */

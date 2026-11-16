@@ -10,7 +10,7 @@ import type { LivePrices } from "~/state/live-prices";
 import { useProfile } from "~/state/store";
 
 interface Props {
-	/** The page's live prices, so the panel shares their connection */
+	/** The page's live prices; the panel shares their connection */
 	livePrices: LivePrices;
 	/** Keyed by coin, e.g. "BTC" */
 	pairs: Record<string, Pair>;
@@ -20,7 +20,7 @@ interface Props {
 	listClassName?: string;
 }
 
-/** Holdings and trade history tabs over one scrolling list; place inside a flex column */
+/** Holdings and trade history tabs over one scrolling list, as children of a flex column */
 export default function PortfolioPanel({
 	livePrices,
 	pairs,

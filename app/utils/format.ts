@@ -1,4 +1,4 @@
-// Formatters are created once and reused; `undefined` = the browser's locale
+// created once; `undefined` = the browser's locale
 const usdt = new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const signedUsdt = new Intl.NumberFormat(undefined, {
 	minimumFractionDigits: 2,

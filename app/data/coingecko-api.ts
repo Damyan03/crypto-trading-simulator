@@ -1,9 +1,10 @@
 import { getJson } from "./http";
 import { cached } from "./storage";
 
-// CoinGecko public API, used without a key; rate limited per IP, so results are cached
+// CoinGecko public API, no key needed; rate limited per IP
 const BASE_URL = "https://api.coingecko.com/api/v3";
 
+// info cache: format version, max age (1 hour)
 const INFO_VERSION = 1;
 const INFO_MAX_AGE = 60 * 60 * 1000;
 

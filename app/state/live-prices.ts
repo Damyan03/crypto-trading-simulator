@@ -11,7 +11,7 @@ export function useLivePrices(coinList: string[]) {
 	// false while the live connection is down and reconnecting
 	const [live, setLive] = useState(true);
 
-	// e.g. "BTC,ETH"; a string so the effects only rerun when the coins change
+	// e.g. "BTC,ETH"; the effects rerun only when this string changes
 	const coins = coinList.join(",");
 
 	// REST: prices right away

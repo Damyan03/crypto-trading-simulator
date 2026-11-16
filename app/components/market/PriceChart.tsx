@@ -58,7 +58,7 @@ export default function PriceChart({ pair }: Props) {
 		seriesRef.current = chart.addSeries(CandlestickSeries, {
 			...candleColors(container),
 			borderVisible: false,
-			// same decimals as the rest of the app (from the pair's tickSize)
+			// the pair's price decimals (from tickSize)
 			priceFormat: { type: "price", precision: pair.priceDecimals, minMove: 1 / 10 ** pair.priceDecimals },
 		});
 		chartRef.current = chart;
@@ -95,7 +95,7 @@ export default function PriceChart({ pair }: Props) {
 		drawnRef.current = { first: candles[0].time, length: candles.length };
 	}, [candles]);
 
-	// fewer than LOAD_EDGE bars left of the view loads older candles
+	// older candles load near the left edge
 	const oldest = candles?.[0]?.time;
 	useEffect(() => {
 		const timeScale = chartRef.current?.timeScale();
@@ -107,7 +107,7 @@ export default function PriceChart({ pair }: Props) {
 		return () => timeScale.unsubscribeVisibleLogicalRangeChange(onRangeChange);
 	}, [oldest, loadOlder]);
 
-	//sets the chart and series colors when the theme changes
+	// a theme change repaints the canvas with the new colors
 	useEffect(() => {
 		const container = containerRef.current;
 		if (!container) return;

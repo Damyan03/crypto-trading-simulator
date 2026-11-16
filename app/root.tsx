@@ -58,7 +58,7 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-	// shown instead of App, so outside LanguageProvider
+	// renders instead of App, outside LanguageProvider
 	const text = DICTIONARIES[startLanguage()].errorPage;
 	let message = text.title;
 	let details = text.details;

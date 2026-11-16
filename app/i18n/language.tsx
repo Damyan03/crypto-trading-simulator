@@ -4,7 +4,7 @@ import { load, save } from "~/data/storage";
 import { bg } from "./bg";
 import { en, type Dictionary } from "./en";
 
-/** Every supported language; to add one, copy en.ts and list it here */
+/** Every supported language by code */
 export const DICTIONARIES = { en, bg } satisfies Record<string, Dictionary>;
 
 export type Language = keyof typeof DICTIONARIES;

@@ -41,10 +41,10 @@ export default function Trade({ params }: Route.ComponentProps) {
 		);
 	}
 
-	// key: a new coin starts with fresh state instead of showing the previous coin's data
+	// key: a new coin remounts with fresh state
 	return (
 		// panels share 1px dividers; fills the screen on wide screens, stacks and scrolls as a page on narrow ones
-		// left: coin, chart, holdings/history; right: order book above the trade form, so neither leaves an empty column
+		// left: coin, chart, holdings/history; right: order book above the trade form
 		<div className="flex min-h-full flex-col bg-surface lg:h-full lg:flex-row">
 			<div className="flex min-w-0 flex-col lg:min-h-0 lg:flex-1">
 				<section className="flex flex-col border-b lg:min-h-0 lg:flex-3">

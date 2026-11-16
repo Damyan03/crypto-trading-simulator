@@ -1,4 +1,4 @@
-// Added to every key so ours are easy to spot in localStorage
+// prefix of every localStorage key
 const PREFIX = "crypto-sim-";
 
 /** What gets saved in localStorage */
@@ -28,7 +28,7 @@ export function save<T>(key: string, version: number, data: T) {
 	}
 }
 
-// Fetches in progress, shared so the same data is never downloaded twice at once
+// fetches in progress by key; a second call for the same key gets the same promise
 const inFlight = new Map<string, Promise<unknown>>();
 
 /** Saved data if it's fresh, otherwise fetches and saves it (null results aren't saved) */

@@ -10,10 +10,10 @@ export interface Holding {
 	avgPrice: number;
 }
 
-/** Holdings of each coin, e.g. { BTC: { quantity: 1.5, avgPrice: 64000 } } */
+/** Holdings by coin */
 export type Holdings = Record<string, Holding>;
 
-/** Latest price in USDT per coin, e.g. { BTC: 97000, ETH: 3400 } */
+/** Latest price in USDT by coin */
 export type Prices = Record<string, number>;
 
 /** Prices of several coins at one moment */
@@ -27,7 +27,7 @@ export type Side = "BUY" | "SELL";
 
 /** A completed trade; stored as it happened, never changed */
 export interface Trade {
-	/** 1, 2, 3… */
+	/** Sequential, from 1 */
 	id: number;
 	/** Unix time in ms */
 	time: number;
@@ -40,7 +40,7 @@ export interface Trade {
 	fee: number;
 }
 
-/** The account's total value at one moment, for the equity curve */
+/** The account's total value at one moment */
 export interface EquityPoint {
 	/** Unix time in ms */
 	time: number;
@@ -58,12 +58,12 @@ export interface Profile {
 	equity: EquityPoint[];
 }
 
-/** create new profile; its equity curve starts at the starting balance */
+/** A new profile; its equity curve starts at the starting balance */
 export function createProfile(now = Date.now()): Profile {
 	return { balance: STARTING_BALANCE, holdings: {}, trades: [], equity: [{ time: now, value: STARTING_BALANCE }] };
 }
 
-/** value of all holdings; null until every held coin's price is loaded */
+/** Value of all holdings; null until every held coin's price is loaded */
 export function holdingsValue(holdings: Holdings, prices: Prices): number | null {
 	let total = 0;
 	for (const [coin, { quantity }] of Object.entries(holdings)) {
@@ -74,24 +74,24 @@ export function holdingsValue(holdings: Holdings, prices: Prices): number | null
 	return total;
 }
 
-/** cash + holdings total value; null until every held coin's price is loaded */
+/** Cash + holdings; null until every held coin's price is loaded */
 export function totalValue(profile: Profile, prices: Prices): number | null {
 	const holdings = holdingsValue(profile.holdings, prices);
 	return holdings === null ? null : profile.balance + holdings;
 }
 
-/** gain or loss of `value` vs `cost`, in USDT and % */
+/** Gain or loss of `value` vs `cost`, in USDT and % */
 function gain(value: number, cost: number) {
 	const amount = value - cost;
 	return { amount, percent: (amount / cost) * 100 };
 }
 
-/** profit/loss of the account vs the starting balance */
+/** Profit/loss of the account vs the starting balance */
 export function profitLoss(total: number) {
 	return gain(total, STARTING_BALANCE);
 }
 
-/** a holding's value at `price`, and its profit/loss vs what it cost (fees included) */
+/** A holding's value at `price` and its profit/loss vs its cost (fees included) */
 export function holdingStats(holding: Holding, price: number) {
 	const value = holding.quantity * price;
 	return { value, pnl: gain(value, holding.quantity * holding.avgPrice) };

@@ -4,7 +4,7 @@ import { load, save } from "~/data/storage";
 import { createDemoProfile, DEMO_COINS, DEMO_HOURS } from "~/domain/demo";
 import { createProfile, type EquityPoint, type Profile, type Trade } from "~/domain/profile";
 
-// Bump the version when the Profile shape changes; old saves are then ignored
+// Profile format version; saves with another version are ignored
 const STORAGE_KEY = "profile";
 const STORAGE_VERSION = 4;
 
@@ -18,7 +18,7 @@ interface ProfileState {
 	resetToDemo: () => Promise<void>;
 }
 
-// Shares the profile with every component inside ProfileProvider
+// the profile for every component inside ProfileProvider
 const ProfileContext = createContext<ProfileState | null>(null);
 
 const isTrade = (t: Trade) =>

@@ -1,5 +1,5 @@
 /**
- * Every text the app shows, in English. Other languages copy this file and keep the same shape (Dictionary).
+ * Every text the app shows, in English; other languages have the same shape (Dictionary).
  * Values passed to the functions are already formatted, e.g. "1,234.50 USDT".
  */
 export const en = {
@@ -92,7 +92,7 @@ export const en = {
 		available: "Available",
 		enterAmount: "Enter an amount, e.g. 0.5.",
 		tooManyDecimals: (coin: string, decimals: number) => `${coin} allows at most ${decimals} decimals.`,
-		// why validateTrade rejected the trade
+		// validateTrade rejections
 		rejected: {
 			amount: (_coin: string) => "Amount must be more than 0.",
 			cash: (_coin: string) => "Not enough cash for the trade and its fee.",
