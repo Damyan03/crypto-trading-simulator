@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { getPriceHistory, getTradingPairs } from "~/data/binance-api";
+import { getPriceHistory, getTradingPairs } from "~/data/binance-rest";
 import { load, save } from "~/data/storage";
 import { createDemoProfile, DEMO_COINS, DEMO_HOURS } from "~/domain/demo";
 import { createProfile, type EquityPoint, type Profile, type Trade } from "~/domain/profile";

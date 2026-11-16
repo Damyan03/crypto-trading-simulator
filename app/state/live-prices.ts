@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { getPrices, subscribePrices } from "~/data/binance-api";
+import { getPrices } from "~/data/binance-rest";
+import { subscribePrices } from "~/data/binance-ws";
 import type { Prices } from "~/domain/profile";
 
 /** Prices of the given coins: fetched right away, then kept live by one stream */

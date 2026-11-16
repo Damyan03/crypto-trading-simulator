@@ -5,7 +5,7 @@ import PortfolioTabs, { type PortfolioTab } from "~/components/portfolio/Portfol
 import ReconnectingNote from "~/components/ui/ReconnectingNote";
 import SearchBox from "~/components/ui/SearchBox";
 import TradeHistory from "~/components/portfolio/TradeHistory";
-import type { Pair } from "~/data/binance-api";
+import type { Pair } from "~/data/binance-rest";
 import type { LivePrices } from "~/state/live-prices";
 import { useProfile } from "~/state/store";
 

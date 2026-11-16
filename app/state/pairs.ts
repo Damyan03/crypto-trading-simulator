@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getTradingPairs, type Pair } from "~/data/binance-api";
+import { getTradingPairs, type Pair } from "~/data/binance-rest";
 
 /** Every tradable pair keyed by coin, e.g. pairs.BTC; undefined while loading */
 export function usePairs() {

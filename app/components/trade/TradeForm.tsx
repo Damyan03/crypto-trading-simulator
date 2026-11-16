@@ -1,7 +1,7 @@
 import { useState } from "react";
 import QuickAmounts from "~/components/trade/QuickAmounts";
 import SegmentedControl from "~/components/ui/SegmentedControl";
-import type { Pair } from "~/data/binance-api";
+import type { Pair } from "~/data/binance-rest";
 import { QUOTE, type Side } from "~/domain/profile";
 import { applyTrade, quantityFor, roundDown, tradeFee, validateTrade } from "~/domain/trade-logic";
 import { useText } from "~/i18n/language";

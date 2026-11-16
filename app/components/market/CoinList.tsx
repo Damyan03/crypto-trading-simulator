@@ -4,7 +4,7 @@ import Notice from "~/components/ui/Notice";
 import Pagination from "~/components/ui/Pagination";
 import ReconnectingNote from "~/components/ui/ReconnectingNote";
 import { LinkRow, Table, Td, Th } from "~/components/ui/Table";
-import type { Market } from "~/data/binance-api";
+import type { Market } from "~/data/binance-rest";
 import { QUOTE } from "~/domain/profile";
 import { useText } from "~/i18n/language";
 import { useLiveTickers, useMarkets } from "~/state/markets";

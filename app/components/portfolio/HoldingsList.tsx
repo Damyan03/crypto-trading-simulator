@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 import Notice from "~/components/ui/Notice";
 import { LinkRow, Table, Td, Th } from "~/components/ui/Table";
-import type { Pair } from "~/data/binance-api";
+import type { Pair } from "~/data/binance-rest";
 import { holdingStats, QUOTE, type Holdings, type Prices } from "~/domain/profile";
 import { useText } from "~/i18n/language";
 import { changeColor, formatPercent, formatPrice, formatQuantity, formatSignedUsdt, formatUsdt } from "~/utils/format";

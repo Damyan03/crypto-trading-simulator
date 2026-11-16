@@ -3,7 +3,7 @@ import ErrorMessage from "~/components/ui/ErrorMessage";
 import Notice from "~/components/ui/Notice";
 import ReconnectingNote from "~/components/ui/ReconnectingNote";
 import SegmentedControl from "~/components/ui/SegmentedControl";
-import type { Pair } from "~/data/binance-api";
+import type { Pair } from "~/data/binance-rest";
 import { groupDepth, type DepthLevel } from "~/domain/order-book";
 import { QUOTE } from "~/domain/profile";
 import { useText } from "~/i18n/language";

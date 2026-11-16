@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getCandles, subscribeCandles, type Candle, type CandleInterval } from "~/data/binance-api";
+import { getCandles, type Candle, type CandleInterval } from "~/data/binance-rest";
+import { subscribeCandles } from "~/data/binance-ws";
 
 // candles per request
 const LIMIT = 500;

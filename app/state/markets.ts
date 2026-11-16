@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { getMarkets, subscribeTickers, type Market, type Ticker } from "~/data/binance-api";
+import { getMarkets, type Market, type Ticker } from "~/data/binance-rest";
+import { subscribeTickers } from "~/data/binance-ws";
 
 // ms before connecting to a new set of coins; changes within it open one connection, not one each
 const SUBSCRIBE_DELAY = 300;

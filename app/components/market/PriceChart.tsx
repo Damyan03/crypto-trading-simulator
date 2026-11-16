@@ -10,7 +10,7 @@ import {
 import ErrorMessage from "~/components/ui/ErrorMessage";
 import ReconnectingNote from "~/components/ui/ReconnectingNote";
 import SegmentedControl from "~/components/ui/SegmentedControl";
-import type { Candle, CandleInterval, Pair } from "~/data/binance-api";
+import type { Candle, CandleInterval, Pair } from "~/data/binance-rest";
 import { useText } from "~/i18n/language";
 import { useCandles } from "~/state/candles";
 import { useTheme } from "~/state/theme";

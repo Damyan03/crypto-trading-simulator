@@ -1,7 +1,7 @@
 import Notice from "~/components/ui/Notice";
 import Pagination from "~/components/ui/Pagination";
 import { LinkRow, Table, Td, Th } from "~/components/ui/Table";
-import type { Pair } from "~/data/binance-api";
+import type { Pair } from "~/data/binance-rest";
 import { QUOTE, type Trade } from "~/domain/profile";
 import { useText } from "~/i18n/language";
 import { formatPrice, formatQuantity, formatTime, formatUsdt } from "~/utils/format";

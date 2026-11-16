@@ -2,7 +2,7 @@ import ErrorMessage from "~/components/ui/ErrorMessage";
 import Notice from "~/components/ui/Notice";
 import ReconnectingNote from "~/components/ui/ReconnectingNote";
 import Stat from "~/components/ui/Stat";
-import type { Pair } from "~/data/binance-api";
+import type { Pair } from "~/data/binance-rest";
 import { QUOTE } from "~/domain/profile";
 import { useText } from "~/i18n/language";
 import { useCoinInfo, useCoinStats } from "~/state/coin";

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { getCoinStats, subscribeCoinStats, type CoinStats } from "~/data/binance-api";
+import { getCoinStats, type CoinStats } from "~/data/binance-rest";
+import { subscribeCoinStats } from "~/data/binance-ws";
 import { getCoinInfo, type CoinInfo } from "~/data/coingecko-api";
 
 /** 24h stats for one pair, e.g. "BTCUSDT": fetched right away, then kept live by a stream */

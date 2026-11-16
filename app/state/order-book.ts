@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { subscribeOrderBook } from "~/data/binance-api";
+import { subscribeOrderBook } from "~/data/binance-ws";
 import type { Depth } from "~/domain/order-book";
 
 /** Live order book for one pair, e.g. "BTCUSDT"; null until it's in sync */
