@@ -1,30 +1,45 @@
-import { Link } from "react-router";
+import { Link, NavLink } from "react-router";
 import ProfileMenu from "~/components/layout/ProfileMenu";
 import { QUOTE } from "~/data/binance-api";
 import { useText } from "~/i18n/language";
 import { useProfile } from "~/state/store";
 import { formatUsdt } from "~/utils/format";
 
-/** Top bar: title, navigation and cash balance */
+// the current page's link is highlighted
+const navLink = ({ isActive }: { isActive: boolean }) =>
+	isActive ? "font-semibold text-foreground" : "text-muted-foreground hover:text-foreground";
+
+/**
+ * Top bar: title, navigation, cash balance and the profile menu.
+ * Phones: title and profile on the first row, navigation and balance on the second; wider screens: one row.
+ */
 export default function Header() {
 	const { profile } = useProfile();
 	const text = useText().header;
 
 	return (
-		<header className="flex h-1/12 items-center border-b bg-surface p-4 text-foreground">
-			<Link to="/">
-				<h1 className="text-2xl font-bold">{text.title}</h1>
+		<header className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 border-b bg-surface px-4 py-2 text-foreground sm:flex-nowrap sm:py-3">
+			{/* shrinks and truncates first when space runs out */}
+			<Link to="/" className="min-w-0 flex-1 sm:flex-initial">
+				<h1 className="truncate text-lg font-bold sm:text-xl">{text.title}</h1>
 			</Link>
-			<Link to="/" className="ml-4 text-primary">
-				{text.discover}
-			</Link>
-			<Link to="/portfolio" className="ml-4 text-primary">
-				{text.portfolio}
-			</Link>
-			<div className="ml-auto tabular-nums">
-				{formatUsdt(profile.balance)} {QUOTE}
+			{/* second in the markup so it stays top right on phones; last on wider screens */}
+			<div className="sm:order-last">
+				<ProfileMenu />
 			</div>
-			<ProfileMenu />
+			<div className="flex w-full items-center justify-between gap-4 sm:w-auto sm:flex-1">
+				<nav className="flex gap-4">
+					<NavLink to="/" end className={navLink}>
+						{text.discover}
+					</NavLink>
+					<NavLink to="/portfolio" className={navLink}>
+						{text.portfolio}
+					</NavLink>
+				</nav>
+				<div className="whitespace-nowrap font-semibold tabular-nums">
+					{formatUsdt(profile.balance)} {QUOTE}
+				</div>
+			</div>
 		</header>
 	);
 }

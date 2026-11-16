@@ -46,14 +46,21 @@ export default function ProfileMenu() {
 	const [error, setError] = useState<Error | null>(null);
 	const ref = useRef<HTMLDivElement>(null);
 
-	// a click anywhere outside closes the menu
+	// a click or tap outside, or Escape, closes the menu
 	useEffect(() => {
 		if (!open) return;
-		const close = (e: MouseEvent) => {
+		const clickOutside = (e: PointerEvent) => {
 			if (!ref.current?.contains(e.target as Node)) setOpen(false);
 		};
-		document.addEventListener("mousedown", close);
-		return () => document.removeEventListener("mousedown", close);
+		const escape = (e: KeyboardEvent) => {
+			if (e.key === "Escape") setOpen(false);
+		};
+		document.addEventListener("pointerdown", clickOutside);
+		document.addEventListener("keydown", escape);
+		return () => {
+			document.removeEventListener("pointerdown", clickOutside);
+			document.removeEventListener("keydown", escape);
+		};
 	}, [open]);
 
 	// both ask first: the old holdings and trades can't be restored
@@ -87,12 +94,19 @@ export default function ProfileMenu() {
 	const item = "block w-full px-4 py-2 text-left hover:bg-muted disabled:opacity-50";
 
 	return (
-		<div ref={ref} className="relative ml-4">
-			<button type="button" onClick={toggle} className="rounded px-2 py-1 hover:bg-muted">
+		<div ref={ref} className="relative">
+			<button
+				type="button"
+				onClick={toggle}
+				aria-expanded={open}
+				aria-haspopup="menu"
+				className="whitespace-nowrap rounded px-2 py-1 hover:bg-muted"
+			>
 				{profileMenu.open} ▾
 			</button>
 			{open && (
-				<div className="absolute right-0 top-full z-10 mt-1 w-56 overflow-hidden rounded border bg-surface text-sm shadow-lg">
+				// opens leftwards from the button's right edge; never wider than the screen
+				<div className="absolute right-0 top-full z-20 mt-1 w-56 max-w-[calc(100vw-2rem)] border bg-surface text-sm text-foreground shadow-sm">
 					<button type="button" onClick={resetToDefault} disabled={loadingDemo} className={item}>
 						{profileMenu.resetToDefault}
 					</button>

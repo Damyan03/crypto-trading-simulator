@@ -9,9 +9,9 @@ interface Props {
 export default function ErrorMessage({ error, onRetry }: Props) {
 	const text = useText();
 	return (
-		<div className="flex items-center gap-4 p-4 text-danger">
+		<div className="flex items-center gap-3 p-4 text-danger">
 			<span>{errorText(text, error)}</span>
-			<button onClick={onRetry} className="rounded bg-primary px-3 py-1 text-white hover:bg-primary/90">
+			<button type="button" onClick={onRetry} className="rounded bg-primary px-3 py-1 text-white hover:bg-primary/90">
 				{text.common.retry}
 			</button>
 		</div>

@@ -1,5 +1,14 @@
 import { useEffect, useRef } from "react";
-import { BaselineSeries, createChart, type IChartApi, type ISeriesApi, type UTCTimestamp } from "lightweight-charts";
+import {
+	BaselineSeries,
+	createChart,
+	LineStyle,
+	type IChartApi,
+	type IPriceLine,
+	type ISeriesApi,
+	type UTCTimestamp,
+} from "lightweight-charts";
+import { evenEquity } from "~/domain/equity";
 import { STARTING_BALANCE, type EquityPoint } from "~/domain/profile";
 import { useText } from "~/i18n/language";
 import { useTheme } from "~/state/theme";
@@ -9,25 +18,33 @@ interface Props {
 	points: EquityPoint[];
 }
 
-/** The chart needs ascending times in seconds, one point each; the last point in a second wins */
-function toChartData(points: EquityPoint[]) {
-	const bySecond = new Map<number, number>();
-	for (const { time, value } of points) bySecond.set(Math.floor(time / 1000), value);
-	return [...bySecond].map(([time, value]) => ({ time: time as UTCTimestamp, value }));
-}
+// enough for a smooth line; also sets the grid step, e.g. a week of history → hourly points
+const MAX_CHART_POINTS = 500;
 
-// green above the starting balance, red below, in the current theme
-function equityColors(container: HTMLElement) {
-	const color = (variable: string) => themeColor(container, variable);
-	return {
-		topLineColor: color("--color-success"),
-		topFillColor1: color("--color-success-subtle"),
-		topFillColor2: color("--color-surface"),
-		bottomLineColor: color("--color-danger"),
-		bottomFillColor1: color("--color-surface"),
-		bottomFillColor2: color("--color-danger-subtle"),
-	};
-}
+/** The chart spaces points evenly, so they go on an even time grid first; times in seconds */
+const toChartData = (points: EquityPoint[]) =>
+	evenEquity(points, MAX_CHART_POINTS).map(({ time, value }) => ({
+		time: Math.floor(time / 1000) as UTCTimestamp,
+		value,
+	}));
+
+// the shared chart look without grid lines
+const equityChartOptions = (container: HTMLElement) => ({
+	...chartOptions(container),
+	grid: { vertLines: { visible: false }, horzLines: { visible: false } },
+});
+
+// line only, no fills: green above the starting balance, red below, in the current theme
+const lineColors = (container: HTMLElement) => ({
+	topLineColor: themeColor(container, "--color-success"),
+	bottomLineColor: themeColor(container, "--color-danger"),
+	topFillColor1: "transparent",
+	topFillColor2: "transparent",
+	bottomFillColor1: "transparent",
+	bottomFillColor2: "transparent",
+});
+
+const startColor = (container: HTMLElement) => ({ color: themeColor(container, "--color-muted-foreground") });
 
 /** Account value over time: green above the starting balance, red below (TradingView Lightweight Charts) */
 export default function EquityChart({ points }: Props) {
@@ -36,6 +53,8 @@ export default function EquityChart({ points }: Props) {
 	const { theme } = useTheme();
 	const chartRef = useRef<IChartApi | null>(null);
 	const seriesRef = useRef<ISeriesApi<"Baseline"> | null>(null);
+	// dotted line at the starting balance
+	const startLineRef = useRef<IPriceLine | null>(null);
 	// zoom to fit only the first time, so new points don't reset the user's zoom
 	const fittedRef = useRef(false);
 
@@ -43,18 +62,30 @@ export default function EquityChart({ points }: Props) {
 		const container = containerRef.current;
 		if (!container) return;
 
-		const chart = createChart(container, chartOptions(container));
+		const chart = createChart(container, equityChartOptions(container));
 		chartRef.current = chart;
-		seriesRef.current = chart.addSeries(BaselineSeries, {
+		const series = chart.addSeries(BaselineSeries, {
 			baseValue: { type: "price", price: STARTING_BALANCE },
+			...lineColors(container),
 			lineWidth: 2,
-			...equityColors(container),
-			priceFormat: { type: "price", precision: 2, minMove: 0.01 },
+			// no dashed line across the chart at the latest value
+			priceLineVisible: false,
+			// whole USDT on the axis, e.g. 10,250
+			priceFormat: { type: "price", precision: 0, minMove: 1 },
+		});
+		seriesRef.current = series;
+		startLineRef.current = series.createPriceLine({
+			price: STARTING_BALANCE,
+			...startColor(container),
+			lineWidth: 1,
+			lineStyle: LineStyle.Dotted,
+			axisLabelVisible: false,
 		});
 
 		return () => {
 			chartRef.current = null;
 			seriesRef.current = null;
+			startLineRef.current = null;
 			fittedRef.current = false;
 			chart.remove();
 		};
@@ -73,8 +104,9 @@ export default function EquityChart({ points }: Props) {
 	useEffect(() => {
 		const container = containerRef.current;
 		if (!container) return;
-		chartRef.current?.applyOptions(chartOptions(container));
-		seriesRef.current?.applyOptions(equityColors(container));
+		chartRef.current?.applyOptions(equityChartOptions(container));
+		seriesRef.current?.applyOptions(lineColors(container));
+		startLineRef.current?.applyOptions(startColor(container));
 	}, [theme]);
 
 	return (

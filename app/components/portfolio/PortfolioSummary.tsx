@@ -17,7 +17,7 @@ export default function PortfolioSummary({ profile, prices }: Props) {
 	const pnl = total === null ? null : profitLoss(total);
 
 	return (
-		<dl className="grid h-full grid-cols-2 content-center gap-6 bg-surface p-6 text-xl text-foreground md:grid-cols-4">
+		<dl className="grid grid-cols-2 gap-6 bg-surface p-6 text-xl text-foreground md:grid-cols-4">
 			<Stat label={portfolio.totalValue} value={total === null ? "…" : `${formatUsdt(total)} ${QUOTE}`} />
 			<Stat label={portfolio.cash} value={`${formatUsdt(profile.balance)} ${QUOTE}`} />
 			<Stat label={portfolio.holdings} value={total === null ? "…" : `${formatUsdt(total - profile.balance)} ${QUOTE}`} />

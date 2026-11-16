@@ -80,7 +80,7 @@ export default function TradeForm({ pair, price }: Props) {
 	const row = "flex justify-between gap-2";
 
 	return (
-		<div className="flex h-full flex-col gap-4 bg-surface p-4 text-foreground">
+		<div className="flex flex-col gap-2 bg-surface p-3 text-foreground">
 			<div className="flex rounded border bg-muted focus-within:ring-2 focus-within:ring-ring">
 				<input
 					type="text"

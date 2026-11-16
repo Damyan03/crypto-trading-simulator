@@ -40,7 +40,7 @@ export default function CoinList({ query }: Props) {
 
 	// shared cell styles
 	const th = "px-4 py-2 text-right font-normal whitespace-nowrap";
-	const td = "px-4 py-3 text-right whitespace-nowrap";
+	const td = "px-4 py-2 text-right whitespace-nowrap";
 
 	return (
 		<div className="h-full overflow-y-auto bg-surface text-foreground">
@@ -68,7 +68,7 @@ export default function CoinList({ query }: Props) {
 								onClick={() => navigate(tradePath(m.coin))}
 								className="cursor-pointer border-b tabular-nums hover:bg-muted"
 							>
-								<td className="px-4 py-3 text-left">
+								<td className="px-4 py-2 text-left">
 									<span className="font-semibold">{m.coin}</span>
 									<span className="ml-2 text-sm text-muted-foreground">/{QUOTE}</span>
 								</td>

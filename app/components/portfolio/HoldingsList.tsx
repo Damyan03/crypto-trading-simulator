@@ -48,7 +48,7 @@ export default function HoldingsList({ holdings, prices, pairs, query }: Props) 
 
 	// shared cell styles
 	const th = "px-4 py-2 text-right font-normal whitespace-nowrap";
-	const td = "px-4 py-3 text-right whitespace-nowrap";
+	const td = "px-4 py-2 text-right whitespace-nowrap";
 
 	return (
 		<table className="w-full">
@@ -69,7 +69,7 @@ export default function HoldingsList({ holdings, prices, pairs, query }: Props) 
 						onClick={() => navigate(tradePath(r.coin))}
 						className="cursor-pointer border-b tabular-nums hover:bg-muted"
 					>
-						<td className="px-4 py-3 text-left font-semibold">{r.coin}</td>
+						<td className="px-4 py-2 text-left font-semibold">{r.coin}</td>
 						<td className={td}>{formatQuantity(r.quantity, r.pair?.quantityDecimals)}</td>
 						<td className={td}>{formatPrice(r.avgPrice, r.pair?.priceDecimals)}</td>
 						<td className={td}>{r.price === undefined ? "…" : formatPrice(r.price, r.pair?.priceDecimals)}</td>

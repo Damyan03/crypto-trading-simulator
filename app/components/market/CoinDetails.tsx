@@ -53,8 +53,8 @@ export default function CoinDetails({ pair }: Props) {
 	const amount = (value: number | null) => (value === null ? "—" : formatVolume(value));
 
 	return (
-		<div className="bg-surface p-4 text-foreground">
-			<div className="flex items-center gap-3">
+		<div className="bg-surface px-4 py-3 text-foreground">
+			<div className="flex items-center gap-2">
 				{info && <img src={info.image} alt="" className="size-8" />}
 				<h2 className="text-xl font-semibold">{info?.name ?? coin}</h2>
 				<span className="text-muted-foreground">
@@ -66,7 +66,7 @@ export default function CoinDetails({ pair }: Props) {
 				</span>
 			</div>
 
-			<dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+			<dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3 lg:grid-cols-5">
 				<Stat label={coinDetails.high} value={price(stats.highPrice)} />
 				<Stat label={coinDetails.low} value={price(stats.lowPrice)} />
 				<Stat label={coinDetails.volume(coin)} value={amount(stats.volume)} />
@@ -83,9 +83,9 @@ export default function CoinDetails({ pair }: Props) {
 				)}
 			</dl>
 
-			{!live && <ReconnectingNote className="mt-3" />}
-			{infoFailed && !info && <p className="mt-3 text-sm text-muted-foreground">{coinDetails.infoFailed}</p>}
-			{info === null && <p className="mt-3 text-sm text-muted-foreground">{coinDetails.noInfo(coin)}</p>}
+			{!live && <ReconnectingNote className="mt-2" />}
+			{infoFailed && !info && <p className="mt-2 text-sm text-muted-foreground">{coinDetails.infoFailed}</p>}
+			{info === null && <p className="mt-2 text-sm text-muted-foreground">{coinDetails.noInfo(coin)}</p>}
 		</div>
 	);
 }

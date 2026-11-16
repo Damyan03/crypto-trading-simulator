@@ -31,29 +31,37 @@ export default function Trade({ params }: Route.ComponentProps) {
 	useEquityRecorder(prices);
 	const [tab, setTab] = useState<PortfolioTab>("holdings");
 
+	// only the error or status until the coin is known to be traded
+	if (!pair) {
+		return (
+			<div className="h-full bg-surface">
+				{error ? (
+					<ErrorMessage error={error} onRetry={retry} />
+				) : (
+					<p className="p-4 text-muted-foreground">
+						{pair === null ? text.trade.notTraded(coin) : text.common.loadingCoin(coin)}
+					</p>
+				)}
+			</div>
+		);
+	}
+
+	// key: a new coin starts with fresh state instead of showing the previous coin's data
 	return (
-		<div className="flex h-full w-full bg-red-500">
-			<div className="flex flex-col w-9/12 h-full bg-green-500">
-				<div className="flex w-full h-9/12 bg-blue-500">
-					<div className="flex flex-col w-4/5 bg-yellow-500 h-full">
-						<div className="w-full bg-green-500">
-							{error && <ErrorMessage error={error} onRetry={retry} />}
-							{!error && pair === undefined && (
-								<p className="bg-surface p-4 text-muted-foreground">{text.common.loadingCoin(coin)}</p>
-							)}
-							{pair === null && <p className="bg-surface p-4 text-muted-foreground">{text.trade.notTraded(coin)}</p>}
-							{/* key: a new coin starts with fresh state instead of showing the previous coin's data */}
-							{pair && <CoinDetails key={pair.symbol} pair={pair} />}
-						</div>
-						<div className="bg-orange-500 flex-1 min-h-0">{pair && <PriceChart key={pair.symbol} pair={pair} />}</div>
+		// panels share 1px dividers; fills the screen on wide screens, stacks and scrolls as a page on narrow ones
+		// left: coin, chart, holdings/history; right: order book above the trade form, so neither leaves an empty column
+		<div className="flex min-h-full flex-col bg-surface lg:h-full lg:flex-row">
+			<div className="flex min-w-0 flex-col lg:min-h-0 lg:flex-1">
+				<section className="flex flex-col border-b lg:min-h-0 lg:flex-[3]">
+					<CoinDetails key={pair.symbol} pair={pair} />
+					<div className="h-80 border-t lg:h-auto lg:min-h-0 lg:flex-1">
+						<PriceChart key={pair.symbol} pair={pair} />
 					</div>
-					<div className="flex-1 min-w-0 bg-cyan-500 h-full">
-						{pair && <OrderBook key={pair.symbol} pair={pair} price={prices[coin]} />}
-					</div>
-				</div>
-				<div className="flex flex-col flex-1 min-h-0 bg-surface">
+				</section>
+				<section className="flex flex-col lg:min-h-48 lg:flex-1">
 					<PortfolioTabs active={tab} onChange={setTab} />
-					<div className="flex-1 min-h-0 overflow-y-auto">
+					{/* stacked: at most the table header + 3 rows (2rem + 3 × 2.5625rem), the rest scrolls */}
+					<div className="max-h-[9.6875rem] overflow-y-auto lg:max-h-none lg:min-h-0 lg:flex-1">
 						{tab === "holdings" ? (
 							<>
 								{pricesError && <ErrorMessage error={pricesError} onRetry={retryPrices} />}
@@ -64,9 +72,16 @@ export default function Trade({ params }: Route.ComponentProps) {
 							<TradeHistory trades={profile.trades} pairs={pairs ?? {}} query="" />
 						)}
 					</div>
-				</div>
+				</section>
 			</div>
-			<div className="flex-1 bg-amber-500">{pair && <TradeForm key={pair.symbol} pair={pair} price={prices[coin]} />}</div>
+			<aside className="flex flex-col border-t lg:w-80 lg:shrink-0 lg:border-l lg:border-t-0">
+				<div className="h-96 lg:h-auto lg:min-h-0 lg:flex-1">
+					<OrderBook key={pair.symbol} pair={pair} price={prices[coin]} />
+				</div>
+				<div className="border-t">
+					<TradeForm key={pair.symbol} pair={pair} price={prices[coin]} />
+				</div>
+			</aside>
 		</div>
 	);
 }

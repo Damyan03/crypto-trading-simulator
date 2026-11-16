@@ -29,7 +29,7 @@ export default function TradeHistory({ trades, pairs, query }: Props) {
 	// shared cell styles
 	const thLeft = "px-4 py-2 text-left font-normal";
 	const th = "px-4 py-2 text-right font-normal whitespace-nowrap";
-	const td = "px-4 py-3 text-right whitespace-nowrap";
+	const td = "px-4 py-2 text-right whitespace-nowrap";
 
 	return (
 		<table className="w-full">
@@ -53,9 +53,9 @@ export default function TradeHistory({ trades, pairs, query }: Props) {
 							onClick={() => navigate(tradePath(t.coin))}
 							className="cursor-pointer border-b tabular-nums hover:bg-muted"
 						>
-							<td className="px-4 py-3 text-left whitespace-nowrap text-muted-foreground">{formatTime(t.time)}</td>
-							<td className="px-4 py-3 text-left font-semibold">{t.coin}</td>
-							<td className={`px-4 py-3 text-left font-semibold ${t.side === "BUY" ? "text-success" : "text-danger"}`}>
+							<td className="px-4 py-2 text-left whitespace-nowrap text-muted-foreground">{formatTime(t.time)}</td>
+							<td className="px-4 py-2 text-left font-semibold">{t.coin}</td>
+							<td className={`px-4 py-2 text-left font-semibold ${t.side === "BUY" ? "text-success" : "text-danger"}`}>
 								{common.side[t.side]}
 							</td>
 							<td className={td}>{formatPrice(t.price, pair?.priceDecimals)}</td>

@@ -23,32 +23,31 @@ export default function Portfolio() {
 	const [tab, setTab] = useState<PortfolioTab>("holdings");
 
 	return (
-		<div className="flex flex-col items-center justify-center h-full w-full bg-red-500">
-			<div className="flex flex-col w-2/3 h-full bg-green-500">
-				<div className="items-center justify-center w-full h-2/5 bg-blue-500">
-					<PortfolioSummary profile={profile} prices={prices} />
+		// fills the screen on wide screens (the list scrolls); stacks and scrolls as a page on narrow ones
+		<div className="mx-auto flex max-w-6xl flex-col gap-4 p-4 lg:h-full">
+			<section className="shrink-0 overflow-hidden border bg-surface">
+				<PortfolioSummary profile={profile} prices={prices} />
+			</section>
+			<section className="h-64 shrink-0 overflow-hidden border bg-surface">
+				<EquityChart points={profile.equity} />
+			</section>
+			<section className="flex h-96 flex-col overflow-hidden border bg-surface lg:h-auto lg:min-h-48 lg:flex-1">
+				<PortfolioTabs active={tab} onChange={setTab} />
+				<div className="border-b p-3">
+					<SearchBox value={query} onChange={setQuery} />
 				</div>
-				<div className="w-full h-1/4 min-h-0 bg-surface">
-					<EquityChart points={profile.equity} />
+				<div className="min-h-0 flex-1 overflow-y-auto">
+					{tab === "holdings" ? (
+						<>
+							{error && <ErrorMessage error={error} onRetry={retry} />}
+							{!live && <ReconnectingNote className="p-4" />}
+							<HoldingsList holdings={profile.holdings} prices={prices} pairs={pairs} query={query} />
+						</>
+					) : (
+						<TradeHistory trades={profile.trades} pairs={pairs} query={query} />
+					)}
 				</div>
-				<div className="flex flex-col flex-1 min-h-0 bg-orange-500">
-					<PortfolioTabs active={tab} onChange={setTab} />
-					<div className="flex items-center px-4 bg-purple-500 w-full h-1/10">
-						<SearchBox value={query} onChange={setQuery} />
-					</div>
-					<div className="flex-1 min-h-0 overflow-y-auto bg-surface">
-						{tab === "holdings" ? (
-							<>
-								{error && <ErrorMessage error={error} onRetry={retry} />}
-								{!live && <ReconnectingNote className="p-4" />}
-								<HoldingsList holdings={profile.holdings} prices={prices} pairs={pairs} query={query} />
-							</>
-						) : (
-							<TradeHistory trades={profile.trades} pairs={pairs} query={query} />
-						)}
-					</div>
-				</div>
-			</div>
+			</section>
 		</div>
 	);
 }
