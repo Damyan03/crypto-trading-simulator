@@ -13,11 +13,30 @@ interface Props {
 
 const pageButton = "rounded px-2 py-1 hover:bg-muted disabled:opacity-50 disabled:hover:bg-transparent";
 
-/** "21–40 of 191" with Previous, page numbers and Next; renders nothing when everything fits on one page */
+/** Scrolls the nearest scrolling panel above `element` back to its top */
+function scrollToTop(element: HTMLElement | null) {
+	for (let el = element?.parentElement; el; el = el.parentElement) {
+		if (el.scrollHeight > el.clientHeight && getComputedStyle(el).overflowY !== "visible") {
+			el.scrollTop = 0;
+			return;
+		}
+	}
+}
+
+/**
+ * "21–40 of 191" with Previous, page numbers and Next; renders nothing when everything fits on one page.
+ * A new page starts at the top of the list.
+ */
 export default function Pagination({ page, pageSize, total, onChange }: Props) {
 	const { pagination } = useText();
+	const ref = useRef<HTMLDivElement>(null);
 	const pageCount = Math.ceil(total / pageSize);
 	if (pageCount <= 1) return null;
+
+	const go = (next: number) => {
+		onChange(next);
+		scrollToTop(ref.current);
+	};
 
 	const range = pagination.range(
 		(page * pageSize + 1).toLocaleString(),
@@ -26,13 +45,13 @@ export default function Pagination({ page, pageSize, total, onChange }: Props) {
 	);
 
 	return (
-		<div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 text-sm">
+		<div ref={ref} className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 text-sm">
 			<span className="tabular-nums text-muted-foreground">{range}</span>
 			<nav className="flex items-center gap-1 tabular-nums">
 				{/* phones show only the arrows */}
 				<button
 					type="button"
-					onClick={() => onChange(page - 1)}
+					onClick={() => go(page - 1)}
 					disabled={page === 0}
 					aria-label={pagination.previous}
 					className={pageButton}
@@ -41,12 +60,12 @@ export default function Pagination({ page, pageSize, total, onChange }: Props) {
 				</button>
 				{pageList(page, pageCount).map((p, i) =>
 					p === null ? (
-						<PageJump key={`gap-${i}`} pageCount={pageCount} label={pagination.goToPage} onJump={onChange} />
+						<PageJump key={`gap-${i}`} pageCount={pageCount} label={pagination.goToPage} onJump={go} />
 					) : (
 						<button
 							key={p}
 							type="button"
-							onClick={() => onChange(p)}
+							onClick={() => go(p)}
 							aria-current={p === page ? "page" : undefined}
 							className={`${pageButton} ${p === page ? "bg-muted font-semibold text-foreground" : "text-muted-foreground"}`}
 						>
@@ -56,7 +75,7 @@ export default function Pagination({ page, pageSize, total, onChange }: Props) {
 				)}
 				<button
 					type="button"
-					onClick={() => onChange(page + 1)}
+					onClick={() => go(page + 1)}
 					disabled={page === pageCount - 1}
 					aria-label={pagination.next}
 					className={pageButton}

@@ -52,7 +52,7 @@ export default function Trade({ params }: Route.ComponentProps) {
 		// left: coin, chart, holdings/history; right: order book above the trade form, so neither leaves an empty column
 		<div className="flex min-h-full flex-col bg-surface lg:h-full lg:flex-row">
 			<div className="flex min-w-0 flex-col lg:min-h-0 lg:flex-1">
-				<section className="flex flex-col border-b lg:min-h-0 lg:flex-[3]">
+				<section className="flex flex-col border-b lg:min-h-0 lg:flex-3">
 					<CoinDetails key={pair.symbol} pair={pair} />
 					<div className="h-80 border-t lg:h-auto lg:min-h-0 lg:flex-1">
 						<PriceChart key={pair.symbol} pair={pair} />
@@ -61,7 +61,7 @@ export default function Trade({ params }: Route.ComponentProps) {
 				<section className="flex flex-col lg:min-h-48 lg:flex-1">
 					<PortfolioTabs active={tab} onChange={setTab} />
 					{/* stacked: at most the table header + 3 rows (2rem + 3 × 2.5625rem), the rest scrolls */}
-					<div className="max-h-[9.6875rem] overflow-y-auto lg:max-h-none lg:min-h-0 lg:flex-1">
+					<div className="max-h-38.75 overflow-y-auto lg:max-h-none lg:min-h-0 lg:flex-1">
 						{tab === "holdings" ? (
 							<>
 								{pricesError && <ErrorMessage error={pricesError} onRetry={retryPrices} />}
