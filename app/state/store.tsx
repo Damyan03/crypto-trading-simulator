@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { getDailyOpens, getTradingPairs } from "~/data/binance-api";
+import { getPriceHistory, getTradingPairs } from "~/data/binance-api";
 import { load, save } from "~/data/storage";
-import { createDemoProfile, DEMO_COINS, DEMO_DAYS } from "~/domain/demo";
+import { createDemoProfile, DEMO_COINS, DEMO_HOURS } from "~/domain/demo";
 import { createProfile, type EquityPoint, type Profile, type Trade } from "~/domain/profile";
 
 // Bump the version when the Profile shape changes; old saves are then ignored
@@ -63,9 +63,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
 	const reset = () => setProfile(createProfile());
 	const resetToDemo = async () => {
-		const [days, pairs] = await Promise.all([getDailyOpens(DEMO_COINS, DEMO_DAYS), getTradingPairs()]);
+		const [history, pairs] = await Promise.all([getPriceHistory(DEMO_COINS, "1h", DEMO_HOURS), getTradingPairs()]);
 		const decimals = Object.fromEntries(pairs.map((p) => [p.coin, p.quantityDecimals]));
-		setProfile(createDemoProfile(days, decimals));
+		setProfile(createDemoProfile(history, decimals));
 	};
 
 	return (

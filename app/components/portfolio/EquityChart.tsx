@@ -55,8 +55,8 @@ export default function EquityChart({ points }: Props) {
 	const seriesRef = useRef<ISeriesApi<"Baseline"> | null>(null);
 	// dotted line at the starting balance
 	const startLineRef = useRef<IPriceLine | null>(null);
-	// zoom to fit only the first time, so new points don't reset the user's zoom
-	const fittedRef = useRef(false);
+	// the curve last drawn: zoom to fit on the first draw and when the account is replaced, not on every new point
+	const drawnRef = useRef<{ start: number; length: number } | null>(null);
 
 	useEffect(() => {
 		const container = containerRef.current;
@@ -86,7 +86,7 @@ export default function EquityChart({ points }: Props) {
 			chartRef.current = null;
 			seriesRef.current = null;
 			startLineRef.current = null;
-			fittedRef.current = false;
+			drawnRef.current = null;
 			chart.remove();
 		};
 	}, []);
@@ -94,10 +94,12 @@ export default function EquityChart({ points }: Props) {
 	useEffect(() => {
 		if (!chartRef.current || !seriesRef.current) return;
 		seriesRef.current.setData(toChartData(points));
-		if (!fittedRef.current) {
-			chartRef.current.timeScale().fitContent();
-			fittedRef.current = true;
-		}
+		const start = points[0]?.time ?? 0;
+		const drawn = drawnRef.current;
+		// a replaced account starts earlier (demo) or has fewer points (reset); the oldest points dropping off
+		// past the limit makes it start later with the same count, which keeps the zoom
+		if (!drawn || start < drawn.start || points.length < drawn.length) chartRef.current.timeScale().fitContent();
+		drawnRef.current = { start, length: points.length };
 	}, [points]);
 
 	// the canvas doesn't follow CSS, so a theme change repaints it with the new colours

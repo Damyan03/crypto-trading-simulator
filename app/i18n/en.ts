@@ -131,6 +131,13 @@ export const en = {
 		total: (quote: string) => `Total (${quote})`,
 		fee: (quote: string) => `Fee (${quote})`,
 	},
+	pagination: {
+		previous: "Previous",
+		next: "Next",
+		goToPage: "Go to page",
+		// e.g. "21–40 of 134"
+		range: (from: string, to: string, total: string) => `${from}–${to} of ${total}`,
+	},
 };
 
 export type Dictionary = typeof en;

@@ -128,4 +128,10 @@ export const bg: Dictionary = {
 		total: (quote: string) => `Общо (${quote})`,
 		fee: (quote: string) => `Такса (${quote})`,
 	},
+	pagination: {
+		previous: "Предишна",
+		next: "Следваща",
+		goToPage: "Към страница",
+		range: (from: string, to: string, total: string) => `${from}–${to} от ${total}`,
+	},
 };

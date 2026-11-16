@@ -261,10 +261,17 @@ export const subscribePrices = (
 		onLiveChange,
 	);
 
-/** Each coin's opening price for the last `days` days (UTC), oldest first; the last day is today */
-export async function getDailyOpens(coins: string[], days: number): Promise<PriceSnapshot[]> {
-	const candles = await Promise.all(coins.map((coin) => getCandles(toSymbol(coin), "1d", days)));
-	// same days for every coin, so the first coin's candles give the times
+/**
+ * Each coin's opening price for the last `count` candles of `interval`, oldest first; the last is the current one,
+ * e.g. getPriceHistory(["BTC", "ETH"], "1h", 24) for every hour of the last day
+ */
+export async function getPriceHistory(
+	coins: string[],
+	interval: CandleInterval,
+	count: number,
+): Promise<PriceSnapshot[]> {
+	const candles = await Promise.all(coins.map((coin) => getCandles(toSymbol(coin), interval, count)));
+	// same candle times for every coin, so the first coin's candles give the times
 	return candles[0].map((candle, i) => ({
 		time: candle.time * 1000,
 		prices: Object.fromEntries(coins.map((coin, c) => [coin, candles[c][i].open])),

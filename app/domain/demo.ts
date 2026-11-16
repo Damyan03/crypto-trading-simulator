@@ -1,37 +1,45 @@
 import { addEquityPoint } from "./equity";
-import { createProfile, totalValue, type PriceSnapshot, type Profile, type Side } from "./profile";
-import { applyTrade, quantityFor, validateTrade } from "./trade-logic";
+import { createProfile, totalValue, type PriceSnapshot, type Profile } from "./profile";
+import { applyTrade, quantityFor, roundDown, validateTrade, type TradeRequest } from "./trade-logic";
 
 /** Coins the demo trades */
 export const DEMO_COINS = ["BTC", "ETH", "SOL"];
 
-/** Days of history the demo needs: day 0 opens the account, the last day is today */
-export const DEMO_DAYS = 8;
+/** Hourly prices the demo needs (8 days): the first opens the account, the last is the current hour */
+export const DEMO_HOURS = 8 * 24;
 
-// [day, side, coin, USDT value]; USDT values fit the starting balance at any price
-const DEMO_TRADES: [number, Side, string, number][] = [
-	[1, "BUY", "BTC", 3_000],
-	[2, "BUY", "ETH", 1_500],
-	[4, "BUY", "SOL", 1_000],
-	[6, "SELL", "BTC", 1_000],
-];
+// USDT for each coin's first buy, so later trades have coins to sell
+const OPENING_BUY = 1_500;
 
 /**
- * An account that traded over the past days at real prices, made with the real trade logic so everything adds up.
- * `days`: each demo coin's price at the start of each day, oldest first; `decimals`: each coin's quantity decimals.
- * One equity point per day.
+ * The demo's trade in `hour`, for the coin whose turn it is (they take turns hour by hour).
+ * After one opening buy per coin: every 4th hour sells a quarter of that coin, the other hours buy 30–120 USDT.
+ * A pattern rather than random, so every demo account trades the same way.
  */
-export function createDemoProfile(days: PriceSnapshot[], decimals: Record<string, number>): Profile {
-	let profile = createProfile(days[0].time);
+function demoTrade(profile: Profile, hour: number, coin: string, price: number, decimals: number): TradeRequest {
+	const opening = hour <= DEMO_COINS.length;
+	if (!opening && hour % 4 === 0) {
+		const held = profile.holdings[coin]?.quantity ?? 0;
+		return { side: "SELL", coin, quantity: roundDown(held / 4, decimals), price };
+	}
+	const usdt = opening ? OPENING_BUY : 30 + ((hour * 37) % 91);
+	return { side: "BUY", coin, quantity: quantityFor(usdt, price, decimals), price };
+}
 
-	days.forEach(({ time, prices }, day) => {
-		if (day === 0) return;
-		for (const [tradeDay, side, coin, usdt] of DEMO_TRADES) {
-			if (tradeDay !== day) continue;
-			const request = { side, coin, quantity: quantityFor(usdt, prices[coin], decimals[coin]), price: prices[coin] };
-			// skipped if the prices make it impossible
-			if (!validateTrade(profile, request)) profile = applyTrade(profile, request, time);
-		}
+/**
+ * An account that traded most hours of the past days at real prices, made with the real trade logic so everything
+ * adds up. `history`: each demo coin's price at the start of each hour, oldest first; `decimals`: each coin's
+ * quantity decimals. One equity point per hour.
+ */
+export function createDemoProfile(history: PriceSnapshot[], decimals: Record<string, number>): Profile {
+	let profile = createProfile(history[0].time);
+
+	history.forEach(({ time, prices }, hour) => {
+		if (hour === 0) return;
+		const coin = DEMO_COINS[hour % DEMO_COINS.length];
+		const request = demoTrade(profile, hour, coin, prices[coin], decimals[coin]);
+		// skipped if it can't happen, e.g. not enough cash at that price
+		if (!validateTrade(profile, request)) profile = applyTrade(profile, request, time);
 		profile = addEquityPoint(profile, totalValue(profile, prices) ?? profile.balance, time);
 	});
 
