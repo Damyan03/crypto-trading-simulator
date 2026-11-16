@@ -1,3 +1,6 @@
+/** The account's currency; every coin is traded against it */
+export const QUOTE = "USDT";
+
 /** Every account starts with this much USDT */
 export const STARTING_BALANCE = 10_000;
 

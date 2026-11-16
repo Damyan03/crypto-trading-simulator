@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { QUOTE } from "~/data/binance-api";
-import { STARTING_BALANCE } from "~/domain/profile";
+import { QUOTE, STARTING_BALANCE } from "~/domain/profile";
 import { DICTIONARIES, errorText, LANGUAGES, useLanguage } from "~/i18n/language";
 import { useProfile } from "~/state/store";
 import { THEMES, useTheme } from "~/state/theme";
@@ -63,7 +62,7 @@ export default function ProfileMenu() {
 		};
 	}, [open]);
 
-	// both ask first: the old holdings and trades can't be restored
+	// both ask for confirmation first
 	const resetToDefault = () => {
 		setOpen(false);
 		if (window.confirm(profileMenu.confirmReset(`${formatUsdt(STARTING_BALANCE)} ${QUOTE}`))) {
@@ -71,7 +70,7 @@ export default function ProfileMenu() {
 		}
 	};
 
-	// the menu stays open while the demo's past prices load, to show progress or the error
+	// the menu stays open while the demo's past prices load, showing progress or the error
 	const loadDemo = async () => {
 		if (!window.confirm(profileMenu.confirmDemo)) return;
 		setError(null);

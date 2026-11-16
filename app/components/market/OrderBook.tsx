@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import ErrorMessage from "~/components/ui/ErrorMessage";
 import Notice from "~/components/ui/Notice";
 import ReconnectingNote from "~/components/ui/ReconnectingNote";
 import SegmentedControl from "~/components/ui/SegmentedControl";
-import { QUOTE, subscribeOrderBook, type Pair } from "~/data/binance-api";
-import { groupDepth, type Depth, type DepthLevel } from "~/domain/order-book";
+import type { Pair } from "~/data/binance-api";
+import { groupDepth, type DepthLevel } from "~/domain/order-book";
+import { QUOTE } from "~/domain/profile";
 import { useText } from "~/i18n/language";
+import { useOrderBook } from "~/state/order-book";
 import { formatPrice, formatQuantity } from "~/utils/format";
 
 // price levels shown per side
@@ -22,26 +24,14 @@ interface Props {
 /** Live order book: how much of the coin is waiting to be bought or sold at each price */
 export default function OrderBook({ pair, price }: Props) {
 	const text = useText().orderBook;
-	const [depth, setDepth] = useState<Depth | null>(null);
-	const [error, setError] = useState<Error | null>(null);
-	const [attempt, setAttempt] = useState(0);
-	// false while the live connection is down and reconnecting
-	const [live, setLive] = useState(true);
+	const { depth, error, live, retry } = useOrderBook(pair.symbol);
 	const [step, setStep] = useState(0);
-
-	// the cleanup closes the connection
-	useEffect(() => {
-		setError(null);
-		return subscribeOrderBook(pair.symbol, setDepth, setLive, setError);
-	}, [pair, attempt]);
-
-	const retry = () => setAttempt((a) => a + 1);
 
 	if (error) return <ErrorMessage error={error} onRetry={retry} />;
 	if (!depth) return <Notice>{text.loading}</Notice>;
 
 	const tick = 10 ** -pair.priceDecimals;
-	// a group of 10 ticks needs one decimal less, and so on
+	// one decimal less per power of ten ticks
 	const decimalsFor = (s: number) => Math.max(0, pair.priceDecimals - s);
 	const decimals = decimalsFor(step);
 	const shown = groupDepth(depth, tick, 10 ** step, LEVELS);
@@ -74,7 +64,7 @@ export default function OrderBook({ pair, price }: Props) {
 				<span>{text.price(QUOTE)}</span>
 				<span>{text.amount(pair.coin)}</span>
 			</div>
-			{/* highest ask on top, so the best ask sits next to the price */}
+			{/* highest ask on top; the best ask sits next to the price */}
 			{[...shown.asks].reverse().map((l) => row(l, "ask"))}
 			<p className="px-3 py-1.5 text-sm font-semibold">
 				{price === undefined ? "…" : formatPrice(price, pair.priceDecimals)}

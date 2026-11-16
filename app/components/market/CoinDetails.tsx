@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
 import ErrorMessage from "~/components/ui/ErrorMessage";
 import Notice from "~/components/ui/Notice";
 import ReconnectingNote from "~/components/ui/ReconnectingNote";
 import Stat from "~/components/ui/Stat";
-import { getCoinStats, QUOTE, subscribeCoinStats, type CoinStats, type Pair } from "~/data/binance-api";
-import { getCoinInfo, type CoinInfo } from "~/data/coingecko-api";
+import type { Pair } from "~/data/binance-api";
+import { QUOTE } from "~/domain/profile";
 import { useText } from "~/i18n/language";
+import { useCoinInfo, useCoinStats } from "~/state/coin";
 import { changeColor, formatPercent, formatPrice, formatVolume } from "~/utils/format";
 
 interface Props {
@@ -16,36 +16,11 @@ interface Props {
 export default function CoinDetails({ pair }: Props) {
 	const { coin } = pair;
 	const { common, coinDetails } = useText();
-	const [stats, setStats] = useState<CoinStats | null>(null);
-	const [error, setError] = useState<Error | null>(null);
-	const [attempt, setAttempt] = useState(0);
-	// undefined = loading, null = CoinGecko doesn't know the coin
-	const [info, setInfo] = useState<CoinInfo | null>();
-	const [infoFailed, setInfoFailed] = useState(false);
-	// false while the live connection is down and reconnecting
-	const [live, setLive] = useState(true);
+	const { stats, error, live, retry } = useCoinStats(pair.symbol);
+	// optional; without it the CoinGecko stats are left out
+	const { info, failed: infoFailed } = useCoinInfo(coin);
 
-	// Binance REST: 24h stats right away
-	useEffect(() => {
-		getCoinStats(pair.symbol).then(setStats).catch(setError);
-	}, [pair, attempt]);
-
-	// Binance stream: live stats; the cleanup closes the connection
-	useEffect(() => subscribeCoinStats(pair.symbol, setStats, setLive), [pair]);
-
-	// CoinGecko: optional, the page still works if it fails
-	useEffect(() => {
-		getCoinInfo(coin)
-			.then(setInfo)
-			.catch(() => setInfoFailed(true));
-	}, [coin]);
-
-	const retry = () => {
-		setError(null);
-		setAttempt((a) => a + 1);
-	};
-
-	// the stream may still deliver stats even if the first request failed
+	// the error shows only while there are no stats; the stream can still deliver them
 	if (error && !stats) return <ErrorMessage error={error} onRetry={retry} />;
 	if (!stats) return <Notice>{common.loadingCoin(coin)}</Notice>;
 

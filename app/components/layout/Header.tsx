@@ -1,6 +1,6 @@
 import { Link, NavLink } from "react-router";
 import ProfileMenu from "~/components/layout/ProfileMenu";
-import { QUOTE } from "~/data/binance-api";
+import { QUOTE } from "~/domain/profile";
 import { useText } from "~/i18n/language";
 import { useProfile } from "~/state/store";
 import { formatUsdt } from "~/utils/format";
@@ -23,7 +23,7 @@ export default function Header() {
 			<Link to="/" className="min-w-0 flex-1 sm:flex-initial">
 				<h1 className="truncate text-lg font-bold sm:text-xl">{text.title}</h1>
 			</Link>
-			{/* second in the markup so it stays top right on phones; last on wider screens */}
+			{/* phones: top right (second in the markup); wider screens: last */}
 			<div className="sm:order-last">
 				<ProfileMenu />
 			</div>

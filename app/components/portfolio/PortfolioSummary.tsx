@@ -1,6 +1,5 @@
 import Stat from "~/components/ui/Stat";
-import { QUOTE } from "~/data/binance-api";
-import { holdingsValue, profitLoss, totalValue, type Prices, type Profile } from "~/domain/profile";
+import { holdingsValue, profitLoss, QUOTE, totalValue, type Prices, type Profile } from "~/domain/profile";
 import { useText } from "~/i18n/language";
 import { changeColor, formatPercent, formatSignedUsdt, formatUsdt } from "~/utils/format";
 

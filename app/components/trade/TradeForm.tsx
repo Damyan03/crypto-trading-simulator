@@ -1,8 +1,8 @@
 import { useState } from "react";
 import QuickAmounts from "~/components/trade/QuickAmounts";
 import SegmentedControl from "~/components/ui/SegmentedControl";
-import { QUOTE, type Pair } from "~/data/binance-api";
-import type { Side } from "~/domain/profile";
+import type { Pair } from "~/data/binance-api";
+import { QUOTE, type Side } from "~/domain/profile";
 import { applyTrade, quantityFor, roundDown, tradeFee, validateTrade } from "~/domain/trade-logic";
 import { useText } from "~/i18n/language";
 import { usePercentPresets } from "~/state/presets";
@@ -39,7 +39,7 @@ export default function TradeForm({ pair, price }: Props) {
 	const quantity =
 		value === null || price === undefined ? null : unit === "coin" ? value : quantityFor(value, price, quantityDecimals);
 
-	// a new amount makes the old message stale
+	// a new amount clears the message
 	const changeAmount = (text: string, newUnit = unit) => {
 		setAmount(text);
 		setUnit(newUnit);
@@ -89,7 +89,7 @@ export default function TradeForm({ pair, price }: Props) {
 					aria-label={trade.amountIn(unit === "coin" ? coin : QUOTE)}
 					className="min-w-0 flex-1 bg-transparent px-3 py-2 tabular-nums placeholder:text-muted-foreground focus:outline-none"
 				/>
-				{/* clears the amount, so it's never read in the other currency */}
+				{/* switching clears the amount */}
 				<SegmentedControl
 					options={UNITS}
 					value={unit}

@@ -1,5 +1,5 @@
 import type { Depth } from "~/domain/order-book";
-import type { Prices, PriceSnapshot } from "~/domain/profile";
+import { QUOTE, type Prices, type PriceSnapshot } from "~/domain/profile";
 import { getJson } from "./http";
 import { cached } from "./storage";
 
@@ -8,11 +8,8 @@ const BASE_URL = "https://api.binance.com/api/v3";
 // Binance live market data, combined streams: "/stream?streams=a/b/c"
 const STREAM_URL = "wss://stream.binance.com:9443/stream?streams=";
 const RECONNECT_DELAY = 3000;
-// order book snapshot levels per side: the most Binance allows (weight 250), deep enough for coarse price groups
+// order book snapshot levels per side: the most Binance allows (weight 250)
 const BOOK_LIMIT = 5000;
-
-/** The only quote currency the app trades against */
-export const QUOTE = "USDT";
 
 // Pair list cache: storage key, format version, kept for 1 hour
 const PAIRS_KEY = "pairs";
@@ -54,7 +51,7 @@ export interface Candle {
 	close: number;
 }
 
-/** One pair's full 24h stats, for the trade page */
+/** One pair's full 24h stats */
 export interface CoinStats {
 	lastPrice: number;
 	priceChangePercent: number;
@@ -111,7 +108,7 @@ export const getTradingPairs = () => cached(PAIRS_KEY, PAIRS_VERSION, PAIRS_MAX_
 const toTicker = (symbol: string, open: string, last: string, quoteVolume: string): Ticker => ({
 	symbol,
 	lastPrice: Number(last),
-	// mini tickers have no % change, so it's calculated from the opening price
+	// mini tickers have no % change; it's calculated from the opening price
 	priceChangePercent: Number(open) > 0 ? ((Number(last) - Number(open)) / Number(open)) * 100 : 0,
 	quoteVolume: Number(quoteVolume),
 });
@@ -190,7 +187,7 @@ function subscribe<T>(stream: string, onMessage: (data: T) => void, onLiveChange
 		ws.onopen = () => onLiveChange(true);
 		// combined streams wrap each message: { stream, data }
 		ws.onmessage = (event) => onMessage((JSON.parse(event.data) as { data: T }).data);
-		// dropped (network, Binance's 24h limit…): try again unless we closed it ourselves
+		// dropped (network, Binance's 24h limit…): reconnects unless closed by the returned function
 		ws.onclose = () => {
 			if (stopped) return;
 			onLiveChange(false);
@@ -282,7 +279,7 @@ export async function getPriceHistory(
 	count: number,
 ): Promise<PriceSnapshot[]> {
 	const candles = await Promise.all(coins.map((coin) => getCandles(toSymbol(coin), interval, count)));
-	// same candle times for every coin, so the first coin's candles give the times
+	// every coin has the same candle times; the times come from the first coin's candles
 	return candles[0].map((candle, i) => ({
 		time: candle.time * 1000,
 		prices: Object.fromEntries(coins.map((coin, c) => [coin, candles[c][i].open])),
@@ -362,7 +359,7 @@ export function subscribeOrderBook(
 			if (!buffer) emit();
 		} catch (e) {
 			if (stopped) return;
-			// can't sync without a snapshot; Retry opens a new connection
+			// a failed snapshot closes the stream; Retry opens a new connection
 			stopped = true;
 			unsubscribe();
 			onError(e as Error);

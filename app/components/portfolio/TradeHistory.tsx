@@ -1,15 +1,15 @@
 import Notice from "~/components/ui/Notice";
 import Pagination from "~/components/ui/Pagination";
 import { LinkRow, Table, Td, Th } from "~/components/ui/Table";
-import { QUOTE, type Pair } from "~/data/binance-api";
-import type { Trade } from "~/domain/profile";
+import type { Pair } from "~/data/binance-api";
+import { QUOTE, type Trade } from "~/domain/profile";
 import { useText } from "~/i18n/language";
 import { formatPrice, formatQuantity, formatTime, formatUsdt } from "~/utils/format";
 import { usePage } from "~/utils/pagination";
 import { tradePath } from "~/utils/paths";
 import { matchesSearch } from "~/utils/search";
 
-// rows per page; only these are rendered, so thousands of trades stay fast
+// rows per page; only the current page is rendered
 const PAGE_SIZE = 20;
 
 interface Props {
