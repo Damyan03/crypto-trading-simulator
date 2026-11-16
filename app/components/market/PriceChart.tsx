@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { CandlestickSeries, createChart, type IChartApi, type ISeriesApi, type UTCTimestamp } from "lightweight-charts";
+import {
+	CandlestickSeries,
+	createChart,
+	type IChartApi,
+	type ISeriesApi,
+	type LogicalRange,
+	type UTCTimestamp,
+} from "lightweight-charts";
 import ErrorMessage from "~/components/ui/ErrorMessage";
 import ReconnectingNote from "~/components/ui/ReconnectingNote";
 import SegmentedControl from "~/components/ui/SegmentedControl";
@@ -9,9 +16,12 @@ import { useCandles } from "~/state/candles";
 import { useTheme } from "~/state/theme";
 import { chartOptions, themeColor } from "~/utils/chart";
 
-// candle lengths to pick from; 500 candles each ≈ 5 days, 3 weeks, 3 months, 1.4 years, 10 years
+// candle lengths to pick from
 const TIMEFRAMES = ["15m", "1h", "4h", "1d", "1w"] as const satisfies readonly CandleInterval[];
 type Timeframe = (typeof TIMEFRAMES)[number];
+
+// bars left of the view below which older candles load
+const LOAD_EDGE = 50;
 
 interface Props {
 	pair: Pair;
@@ -35,7 +45,9 @@ export default function PriceChart({ pair }: Props) {
 	const text = useText().priceChart;
 	const { theme } = useTheme();
 	const [timeframe, setTimeframe] = useState<Timeframe>("1h");
-	const { candles, latest, error, live, retry } = useCandles(pair.symbol, timeframe);
+	const { candles, error, live, retry, loadOlder } = useCandles(pair.symbol, timeframe);
+	// what the series shows: its first candle's start time and the number of candles; null when empty
+	const drawnRef = useRef<{ first: number; length: number } | null>(null);
 
 	// the cleanup removes the chart
 	useEffect(() => {
@@ -54,20 +66,46 @@ export default function PriceChart({ pair }: Props) {
 		return () => {
 			chartRef.current = null;
 			seriesRef.current = null;
+			drawnRef.current = null;
 			chart.remove();
 		};
 	}, [pair]);
 
-	// new history (another timeframe, a retry) replaces every candle; empty while loading
 	useEffect(() => {
-		seriesRef.current?.setData(candles ? candles.map(toBar) : []);
-		if (candles) chartRef.current?.timeScale().fitContent();
+		const series = seriesRef.current;
+		if (!series) return;
+		const drawn = drawnRef.current;
+
+		// loading: empty
+		if (!candles?.length) {
+			series.setData([]);
+			drawnRef.current = null;
+			return;
+		}
+
+		if (drawn?.first === candles[0].time && candles.length - drawn.length <= 1) {
+			// live update: the newest candle changed, or a new one started
+			series.update(toBar(candles[candles.length - 1]));
+		} else {
+			// new history (timeframe, retry) or older candles at the start; the view stays put for older ones
+			series.setData(candles.map(toBar));
+			// new history: latest candles at the default zoom
+			if (!drawn) chartRef.current?.timeScale().resetTimeScale();
+		}
+		drawnRef.current = { first: candles[0].time, length: candles.length };
 	}, [candles]);
 
-	// a live update changes the newest candle, or adds one when a new candle starts
+	// fewer than LOAD_EDGE bars left of the view loads older candles
+	const oldest = candles?.[0]?.time;
 	useEffect(() => {
-		if (latest) seriesRef.current?.update(toBar(latest));
-	}, [latest]);
+		const timeScale = chartRef.current?.timeScale();
+		if (!timeScale || oldest === undefined) return;
+		const onRangeChange = (range: LogicalRange | null) => {
+			if (range && range.from < LOAD_EDGE) loadOlder(oldest);
+		};
+		timeScale.subscribeVisibleLogicalRangeChange(onRangeChange);
+		return () => timeScale.unsubscribeVisibleLogicalRangeChange(onRangeChange);
+	}, [oldest, loadOlder]);
 
 	//sets the chart and series colors when the theme changes
 	useEffect(() => {

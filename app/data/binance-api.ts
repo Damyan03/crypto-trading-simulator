@@ -157,11 +157,29 @@ export async function getCoinStats(symbol: string): Promise<CoinStats> {
 export type CandleInterval =
 	"1s" | "1m" | "3m" | "5m" | "15m" | "30m" | "1h" | "2h" | "4h" | "6h" | "8h" | "12h" | "1d" | "3d" | "1w" | "1M";
 
-/** Candles for one pair, oldest first, e.g. getCandles("BTCUSDT", "1h") */
-export async function getCandles(symbol: string, interval: CandleInterval, limit = 500): Promise<Candle[]> {
+// ms per interval unit; "M" is the shortest month
+const UNIT_MS = { s: 1000, m: 60_000, h: 3_600_000, d: 86_400_000, w: 604_800_000, M: 28 * 86_400_000 };
+
+// e.g. "4h" → 14,400,000
+const intervalMs = (interval: CandleInterval) =>
+	Number(interval.slice(0, -1)) * UNIT_MS[interval.slice(-1) as keyof typeof UNIT_MS];
+
+/**
+ * Candles for one pair, oldest first, e.g. getCandles("BTCUSDT", "1h"): the latest `limit`,
+ * or with `before` (start time in seconds) the `limit` that started before it
+ */
+export async function getCandles(
+	symbol: string,
+	interval: CandleInterval,
+	limit = 500,
+	before?: number,
+): Promise<Candle[]> {
+	// a range of exactly `limit` candles; the docs don't state what endTime alone returns
+	const range =
+		before === undefined ? "" : `&startTime=${before * 1000 - limit * intervalMs(interval)}&endTime=${before * 1000 - 1}`;
 	// each kline is [openTime, open, high, low, close, volume, …]
 	const data = await get<[number, string, string, string, string][]>(
-		`/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`,
+		`/klines?symbol=${symbol}&interval=${interval}&limit=${limit}${range}`,
 	);
 	return data.map(([openTime, open, high, low, close]) => ({
 		time: openTime / 1000,
