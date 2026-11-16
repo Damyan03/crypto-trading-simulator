@@ -32,7 +32,7 @@ export interface Pair {
 }
 
 /** A pair's last 24 hours */
-interface Ticker {
+export interface Ticker {
 	symbol: string;
 	lastPrice: number;
 	/** e.g. -2.5 for -2.5% */
@@ -107,21 +107,20 @@ async function fetchTradingPairs(): Promise<Pair[]> {
 /** Spot pairs trading against QUOTE, cached for an hour */
 export const getTradingPairs = () => cached(PAIRS_KEY, PAIRS_VERSION, PAIRS_MAX_AGE, fetchTradingPairs);
 
+/** A Ticker from mini-ticker values (REST type=MINI or the @miniTicker stream) */
+const toTicker = (symbol: string, open: string, last: string, quoteVolume: string): Ticker => ({
+	symbol,
+	lastPrice: Number(last),
+	// mini tickers have no % change, so it's calculated from the opening price
+	priceChangePercent: Number(open) > 0 ? ((Number(last) - Number(open)) / Number(open)) * 100 : 0,
+	quoteVolume: Number(quoteVolume),
+});
+
 /** 24h stats for every pair */
 async function getTickers(): Promise<Ticker[]> {
 	const data =
 		await get<{ symbol: string; openPrice: string; lastPrice: string; quoteVolume: string }[]>("/ticker/24hr?type=MINI");
-	return data.map((t) => {
-		const open = Number(t.openPrice);
-		const last = Number(t.lastPrice);
-		return {
-			symbol: t.symbol,
-			lastPrice: last,
-			// MINI has no % change, so it's calculated from the opening price
-			priceChangePercent: open > 0 ? ((last - open) / open) * 100 : 0,
-			quoteVolume: Number(t.quoteVolume),
-		};
-	});
+	return data.map((t) => toTicker(t.symbol, t.openPrice, t.lastPrice, t.quoteVolume));
 }
 
 /** Trading pairs with their 24h stats */
@@ -249,15 +248,27 @@ export const subscribeCandles = (
 		onLiveChange,
 	);
 
+// one mini-ticker stream per coin, e.g. "btcusdt@miniTicker/ethusdt@miniTicker"
+const miniTickerStreams = (coins: string[]) =>
+	coins.map((coin) => `${toSymbol(coin).toLowerCase()}@miniTicker`).join("/");
+
 /** Live price of each coin, about once a second, all on one connection */
 export const subscribePrices = (
 	coins: string[],
 	onUpdate: (coin: string, price: number) => void,
 	onLiveChange: (live: boolean) => void,
 ) =>
-	subscribe<{ s: string; c: string }>(
-		coins.map((coin) => `${toSymbol(coin).toLowerCase()}@miniTicker`).join("/"),
-		(t) => onUpdate(toCoin(t.s), Number(t.c)),
+	subscribe<{ s: string; c: string }>(miniTickerStreams(coins), (t) => onUpdate(toCoin(t.s), Number(t.c)), onLiveChange);
+
+/** Live 24h stats (price, % change, volume) of each coin, about once a second, all on one connection */
+export const subscribeTickers = (
+	coins: string[],
+	onUpdate: (ticker: Ticker) => void,
+	onLiveChange: (live: boolean) => void,
+) =>
+	subscribe<{ s: string; o: string; c: string; q: string }>(
+		miniTickerStreams(coins),
+		(t) => onUpdate(toTicker(t.s, t.o, t.c, t.q)),
 		onLiveChange,
 	);
 

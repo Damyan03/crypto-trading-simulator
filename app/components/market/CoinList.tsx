@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import ErrorMessage from "~/components/ui/ErrorMessage";
 import Pagination from "~/components/ui/Pagination";
-import { getMarkets, QUOTE, type Market } from "~/data/binance-api";
+import ReconnectingNote from "~/components/ui/ReconnectingNote";
+import { getMarkets, QUOTE, subscribeTickers, type Market, type Ticker } from "~/data/binance-api";
 import { useText } from "~/i18n/language";
 import { changeColor, formatPercent, formatPrice, formatVolume } from "~/utils/format";
 import { tradePath } from "~/utils/paths";
@@ -14,12 +15,15 @@ const byVolume = (a: Market, b: Market) => b.quoteVolume - a.quoteVolume;
 // rows per page; Binance lists a few hundred USDT pairs
 const PAGE_SIZE = 25;
 
+// paging or typing quickly waits this long before reconnecting, instead of opening a connection per step
+const SUBSCRIBE_DELAY = 300;
+
 interface Props {
 	/** Search box text */
 	query: string;
 }
 
-/** All USDT pairs with price, 24h change and volume */
+/** All USDT pairs with price, 24h change and volume; the coins on screen update live */
 export default function CoinList({ query }: Props) {
 	const navigate = useNavigate();
 	const { common, coinList } = useText();
@@ -29,6 +33,10 @@ export default function CoinList({ query }: Props) {
 	const [attempt, setAttempt] = useState(0);
 	// kept with the search it belongs to, so a new search starts on the first page
 	const [paging, setPaging] = useState({ query, page: 0 });
+	// newest stats from the stream, by symbol; drawn over the loaded list, whose order stays put
+	const [tickers, setTickers] = useState<Record<string, Ticker>>({});
+	// false while the live connection is down and reconnecting
+	const [live, setLive] = useState(true);
 
 	useEffect(() => {
 		getMarkets().then(setMarkets).catch(setError);
@@ -42,7 +50,30 @@ export default function CoinList({ query }: Props) {
 	const pageCount = Math.max(1, Math.ceil((visible?.length ?? 0) / PAGE_SIZE));
 	// stays in range if the list got shorter, e.g. after reloading it
 	const page = Math.min(paging.query === query ? paging.page : 0, pageCount - 1);
-	const shown = visible?.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE) ?? [];
+	const shown = (visible?.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE) ?? []).map((m) => ({
+		...m,
+		...tickers[m.symbol],
+	}));
+
+	// e.g. "BTC,ETH"; a string so the stream only changes when the coins on screen do
+	const shownCoins = shown.map((m) => m.coin).join(",");
+
+	// live stats for the coins on screen only; the cleanup closes the connection
+	useEffect(() => {
+		if (!shownCoins) return;
+		let unsubscribe = () => {};
+		const timer = setTimeout(() => {
+			unsubscribe = subscribeTickers(
+				shownCoins.split(","),
+				(ticker) => setTickers((prev) => ({ ...prev, [ticker.symbol]: ticker })),
+				setLive,
+			);
+		}, SUBSCRIBE_DELAY);
+		return () => {
+			clearTimeout(timer);
+			unsubscribe();
+		};
+	}, [shownCoins]);
 
 	const retry = () => {
 		setError(null);
@@ -61,6 +92,7 @@ export default function CoinList({ query }: Props) {
 				<p className="p-4 text-muted-foreground">{coinList.noMatch(query)}</p>
 			)}
 			{error && <ErrorMessage error={error} onRetry={retry} />}
+			{!live && <ReconnectingNote className="px-4 py-2" />}
 
 			{visible && visible.length > 0 && (
 				<>
