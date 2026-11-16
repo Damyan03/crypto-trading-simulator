@@ -11,7 +11,10 @@ export default function Discover() {
 	return (
 		<div className="mx-auto flex h-full max-w-5xl flex-col gap-4 p-4">
 			<section className="flex flex-col gap-3 border bg-surface p-4">
-				<p className="text-muted-foreground">{text.intro}</p>
+				<div>
+					<h1 className="text-2xl font-semibold text-foreground">{text.title}</h1>
+					<p className="mt-1 text-muted-foreground">{text.intro}</p>
+				</div>
 				<SearchBox value={query} onChange={setQuery} />
 			</section>
 			<section className="min-h-0 flex-1 overflow-hidden border bg-surface">

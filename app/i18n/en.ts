@@ -49,7 +49,8 @@ export const en = {
 		placeholder: "Search coins, e.g. BTC",
 	},
 	discover: {
-		intro: "discover description",
+		title: "Discover",
+		intro: "Find and trade hundreds of coins at live market prices.",
 	},
 	coinList: {
 		loading: "Loading coins…",

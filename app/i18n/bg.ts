@@ -47,7 +47,8 @@ export const bg: Dictionary = {
 		placeholder: "Търсете монети, напр. BTC",
 	},
 	discover: {
-		intro: "описание на страницата",
+		title: "Открий",
+		intro: "Намерете и търгувайте стотици монети по пазарни цени на живо.",
 	},
 	coinList: {
 		loading: "Зареждане на монетите…",
