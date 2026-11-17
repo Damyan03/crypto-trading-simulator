@@ -172,6 +172,8 @@ Screenshots: [`demo/`](demo/)
 
 ![Plan, blockout and final](demo/Progress.png)
 
+https://github.com/user-attachments/assets/d41dbc50-d0fb-4b79-b4a2-5ca10e238271
+
 ## Credits
 
 The charts are made with [TradingView Lightweight Charts™](https://www.tradingview.com/lightweight-charts/), licensed under the Apache License 2.0.
