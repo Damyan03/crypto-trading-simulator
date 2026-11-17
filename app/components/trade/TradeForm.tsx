@@ -108,6 +108,9 @@ export default function TradeForm({ pair, price }: Props) {
 					onEdit={setPercents}
 				/>
 			)}
+			<p className="text-xs tabular-nums text-muted-foreground">
+				{trade.owned}: {formatQuantity(owned, quantityDecimals)} {coin}
+			</p>
 
 			<dl className="flex flex-col gap-1 text-sm tabular-nums">
 				<div className={row}>
